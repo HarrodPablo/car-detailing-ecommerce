@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Brand {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  slug        String    @unique
+  logoUrl     String?
+  description String?
+  country     String?
+  website     String?
+  createdAt   DateTime  @default(now())
+  products    Product[]
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  slug      String     @unique
+  parentId  Int?
+  iconUrl   String?
+  sortOrder Int        @default(0)
+  products  Product[]
+}
+
+model Product {
+  id                 Int            @id @default(autoincrement())
+  name               String
+  slug               String         @unique
+  sku                String         @unique
+  brandId            Int
+  categoryId         Int
+  shortDescription   String?        @db.VarChar(160)
+  longDescription    String?
+  usageNotes         String?
+  costPrice          Decimal        @db.Decimal(10,2)
+  salePrice          Decimal        @db.Decimal(10,2)
+  stock              Int            @default(0)
+  minStock           Int            @default(5)
+  surfaceCompatible  Json?
+  applicationType    String?
+  contentAmount      Decimal?       @db.Decimal(10,2)
+  contentUnit        String?
+  estimatedYield     String?
+  dilutionRatio      String?
+  requiresMachine    Boolean        @default(false)
+  cureTime           String?
+  fragrance          String?
+  countryOfOrigin    String?
+  experienceLevel    String?
+  isActive           Boolean        @default(true)
+  isFeatured         Boolean        @default(false)
+  isNew              Boolean        @default(false)
+  isOffer            Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  brand              Brand          @relation(fields: [brandId], references: [id])
+  category           Category       @relation(fields: [categoryId], references: [id])
+  images             ProductImage[]
+  lots               ProductLot[]
+  orderItems         OrderItem[]
+  kitItems           KitItem[]
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  url       String
+  isPrimary Boolean @default(false)
+  sortOrder Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductLot {
+  id              Int       @id @default(autoincrement())
+  productId       Int
+  lotNumber       String
+  manufactureDate DateTime?
+  expiryDate      DateTime?
+  alertDaysBefore Int       @default(30)
+  status          String    @default("vigente")
+  createdAt       DateTime  @default(now())
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Kit {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  kitPrice    Decimal   @db.Decimal(10,2)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  items       KitItem[]
+  orderItems  OrderItem[]
+}
+
+model KitItem {
+  id        Int     @id @default(autoincrement())
+  kitId     Int
+  productId Int
+  quantity  Int
+  kit       Kit     @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  customerName String?
+  customerPhone String?
+  notes        String?
+  total        Decimal     @db.Decimal(10,2)
+  status       String      @default("pendiente")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  items        OrderItem[]
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int?
+  kitId     Int?
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10,2)
+  subtotal  Decimal  @db.Decimal(10,2)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+  kit       Kit?     @relation(fields: [kitId], references: [id])
+}
+
+model Setting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
