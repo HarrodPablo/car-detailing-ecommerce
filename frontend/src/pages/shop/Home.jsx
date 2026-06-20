@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../lib/axios';
 import { formatCurrency } from '../../utils/formatters';
+import CarruselCombos from '../../components/shop/CarruselCombos';
 
 const Home = () => {
   const [combos, setCombos] = useState([]);
@@ -59,16 +60,8 @@ const Home = () => {
             <h2 className="text-4xl font-heading font-bold text-white text-center mb-12 uppercase tracking-wide">
               Combos <span className="text-brand">Destacados</span>
             </h2>
-            <div className="flex overflow-x-auto gap-6 pb-8 snap-x">
-              {combos.map(combo => (
-                <div key={combo.id} className="min-w-[80vw] md:min-w-[600px] snap-center shrink-0 rounded-lg overflow-hidden relative group">
-                  <img src={combo.imageUrl} alt={combo.name} className="w-full h-auto object-cover" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="btn-primary">Ver Combo</button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            
+            <CarruselCombos combos={combos} />
           </div>
         </div>
       )}

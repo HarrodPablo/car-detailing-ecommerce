@@ -1,38 +1,39 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prisma/client');
 
-const getSettings = async (req, res, next) => {
+const getSettings = async (req, res) => {
   try {
     const settings = await prisma.setting.findMany();
-    
-    // Convert array to object for easier frontend consumption
-    const formatted = settings.reduce((acc, curr) => {
+    const formattedSettings = settings.reduce((acc, curr) => {
       acc[curr.key] = curr.value;
       return acc;
     }, {});
-
-    res.json(formatted);
+    res.json(formattedSettings);
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Error obteniendo configuración', error });
   }
 };
 
-const updateSettings = async (req, res, next) => {
+const updateSettings = async (req, res) => {
   try {
-    const updates = req.body;
+    const updates = req.body; // e.g. { STORE_NAME: "Detailing Hub", WHATSAPP_NUMBER: "1234567" }
     
-    for (const key of Object.keys(updates)) {
-      await prisma.setting.upsert({
+    // Updates are done using transactions to ensure atomicity
+    const transactions = Object.entries(updates).map(([key, value]) => {
+      return prisma.setting.upsert({
         where: { key },
-        update: { value: String(updates[key]) },
-        create: { key, value: String(updates[key]) }
+        update: { value: String(value) },
+        create: { key, value: String(value) }
       });
-    }
+    });
 
-    res.json({ message: 'Settings actualizados' });
+    await prisma.$transaction(transactions);
+    res.json({ message: 'Configuración actualizada con éxito' });
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Error actualizando configuración', error });
   }
 };
 
-module.exports = { getSettings, updateSettings };
+module.exports = {
+  getSettings,
+  updateSettings
+};

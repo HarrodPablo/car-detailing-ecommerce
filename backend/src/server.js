@@ -9,10 +9,23 @@ const initLotExpiryJob = require('./jobs/lotExpiry.job');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  /^https:\/\/goodshop-premium.*\.vercel\.app$/, // previews
+].filter(Boolean);
 
 // Middlewares
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // curl/postman
+    const ok = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
+    callback(ok ? null : new Error('Not allowed by CORS'), ok);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,16 +35,17 @@ app.get('/api/health', (req, res) => {
 });
 
 // Mount Routes
-app.use('/api/auth', require('./routes/auth.route'));
-app.use('/api/products', require('./routes/products.route'));
-app.use('/api/brands', require('./routes/brands.route'));
-app.use('/api/categories', require('./routes/categories.route'));
-app.use('/api/kits', require('./routes/kits.route'));
-app.use('/api/combos', require('./routes/combos.route'));
-app.use('/api/orders', require('./routes/orders.route'));
-app.use('/api/reports', require('./routes/reports.route'));
-app.use('/api/settings', require('./routes/settings.route'));
-app.use('/api/alerts', require('./routes/alerts.route'));
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/products', require('./routes/products.routes'));
+app.use('/api/brands', require('./routes/brands.routes'));
+app.use('/api/categories', require('./routes/categories.routes'));
+app.use('/api/kits', require('./routes/kits.routes'));
+app.use('/api/combos', require('./routes/combos.routes'));
+app.use('/api/orders', require('./routes/orders.routes'));
+app.use('/api/reports', require('./routes/reports.routes'));
+app.use('/api/settings', require('./routes/settings.routes'));
+app.use('/api/alerts', require('./routes/alerts.routes'));
+app.use('/api/lots', require('./routes/lots.routes')); // Added lots since it exists
 
 // Error Middlewares
 app.use(notFound);

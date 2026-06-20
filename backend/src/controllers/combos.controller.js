@@ -1,78 +1,59 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prisma/client');
 
-const getCombos = async (req, res, next) => {
+// GET /api/combos — público, para el carrusel en Home
+const getCombos = async (req, res) => {
   try {
     const combos = await prisma.kit.findMany({
       where: { isActive: true },
-      include: {
-        items: { include: { product: true } }
-      },
+      include: { items: { include: { product: true } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(combos);
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: 'Error obteniendo combos' });
   }
 };
 
-const createCombo = async (req, res, next) => {
+// POST /api/combos — admin, crea combo con imagen_url
+const createCombo = async (req, res) => {
   try {
     const { nombre, precio, productos, imagen_url, isActive } = req.body;
     
-    const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
-
-    const newCombo = await prisma.kit.create({
+    const kit = await prisma.kit.create({
       data: {
         name: nombre,
-        slug,
-        kitPrice: Number(precio),
+        slug: nombre.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          + '-' + Date.now(),
+        kitPrice: parseFloat(precio),
         imageUrl: imagen_url,
-        isActive: isActive !== undefined ? isActive : true,
+        isActive: isActive ?? true,
         items: {
-          create: productos.map(pId => ({
-            productId: Number(pId),
-            quantity: 1 // default for combos
+          create: productos.map(productId => ({
+            productId: parseInt(productId),
+            quantity: 1
           }))
         }
       },
-      include: { items: true }
+      include: { items: { include: { product: true } } }
     });
-    res.status(201).json(newCombo);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateCombo = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { nombre, precio, imagen_url, isActive } = req.body;
     
-    const updateData = {};
-    if (nombre) updateData.name = nombre;
-    if (precio) updateData.kitPrice = Number(precio);
-    if (imagen_url) updateData.imageUrl = imagen_url;
-    if (isActive !== undefined) updateData.isActive = isActive;
-
-    const updatedCombo = await prisma.kit.update({
-      where: { id: Number(id) },
-      data: updateData
-    });
-    res.json(updatedCombo);
+    res.status(201).json(kit);
   } catch (error) {
-    next(error);
+    console.error(error);
+    res.status(500).json({ error: 'Error creando combo' });
   }
 };
 
-const deleteCombo = async (req, res, next) => {
+// DELETE /api/combos/:id — admin
+const deleteCombo = async (req, res) => {
   try {
-    const { id } = req.params;
-    await prisma.kit.delete({ where: { id: Number(id) } });
+    await prisma.kit.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Combo eliminado' });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: 'Error eliminando combo' });
   }
 };
 
-module.exports = { getCombos, createCombo, updateCombo, deleteCombo };
+module.exports = { getCombos, createCombo, deleteCombo };

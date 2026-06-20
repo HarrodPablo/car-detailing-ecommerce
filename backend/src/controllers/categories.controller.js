@@ -1,27 +1,68 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prisma/client');
 
-const getCategories = async (req, res, next) => {
+const getAllCategories = async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
-      orderBy: { sortOrder: 'asc' }
+      orderBy: { sortOrder: 'asc' },
+      include: { children: true }
     });
+    // Build tree if necessary or just return flat list
     res.json(categories);
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Error obteniendo categorías', error });
   }
 };
 
-const createCategory = async (req, res, next) => {
+const getCategoryBySlug = async (req, res) => {
   try {
-    const { name, slug, iconUrl, parentId, sortOrder } = req.body;
-    const newCategory = await prisma.category.create({
-      data: { name, slug, iconUrl, parentId: parentId ? Number(parentId) : null, sortOrder: Number(sortOrder) || 0 }
+    const category = await prisma.category.findUnique({
+      where: { slug: req.params.slug },
+      include: { products: true, children: true }
     });
-    res.status(201).json(newCategory);
+    if (!category) return res.status(404).json({ message: 'Categoría no encontrada' });
+    res.json(category);
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Error obteniendo categoría', error });
   }
 };
 
-module.exports = { getCategories, createCategory };
+const createCategory = async (req, res) => {
+  try {
+    const { name, slug, parentId, iconUrl, sortOrder } = req.body;
+    const category = await prisma.category.create({
+      data: { name, slug, parentId, iconUrl, sortOrder }
+    });
+    res.status(201).json(category);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creando categoría', error });
+  }
+};
+
+const updateCategory = async (req, res) => {
+  try {
+    const category = await prisma.category.update({
+      where: { id: req.params.id },
+      data: req.body
+    });
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ message: 'Error actualizando categoría', error });
+  }
+};
+
+const deleteCategory = async (req, res) => {
+  try {
+    await prisma.category.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Categoría eliminada' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error eliminando categoría', error });
+  }
+};
+
+module.exports = {
+  getAllCategories,
+  getCategoryBySlug,
+  createCategory,
+  updateCategory,
+  deleteCategory
+};
