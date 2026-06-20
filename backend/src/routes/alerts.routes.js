@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { getStockAlerts, getLotExpiryAlerts } = require('../controllers/alerts.controller');
-const { protect } = require('../middlewares/auth.middleware');
+const { authenticate } = require('../middlewares/auth');
 
-router.get('/stock', protect, getStockAlerts);
-router.get('/lotes', protect, getLotExpiryAlerts);
+router.get('/stock', authenticate, getStockAlerts);
+router.get('/lotes', authenticate, getLotExpiryAlerts);
 
 module.exports = router;

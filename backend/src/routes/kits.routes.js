@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllKits, getKitBySlug, createKit, updateKit, deleteKit } = require('../controllers/kitController');
+const { getAllKits, getKitBySlug, createKit, updateKit, deleteKit } = require('../controllers/kits.controller');
 const { authenticate, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllBrands, getBrandBySlug, createBrand, updateBrand, deleteBrand } = require('../controllers/brandController');
+const { getAllBrands, getBrandBySlug, createBrand, updateBrand, deleteBrand } = require('../controllers/brands.controller');
 const { authenticate, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();

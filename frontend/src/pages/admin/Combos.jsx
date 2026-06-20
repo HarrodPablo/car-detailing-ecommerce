@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { dibujarCombo } from '../../utils/canvasCombo';
 import api from '../../lib/axios';
+import { PLANTILLAS } from '../../utils/plantillas';
 
 const Combos = () => {
   const canvasRef = useRef(null);
@@ -27,10 +28,18 @@ const Combos = () => {
   }, []);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext('2d');
-      // In a real scenario, we'd load an Image object for 'plantillaImg' based on combo.plantilla
-      // For now, passing null will use the dark fallback in dibujarCombo
+    if (!canvasRef.current) return;
+    
+    const ctx = canvasRef.current.getContext('2d');
+    const plantillaUrl = PLANTILLAS[combo.plantilla];
+    
+    if (plantillaUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => dibujarCombo(ctx, combo, img);
+      img.onerror = () => dibujarCombo(ctx, combo, null);
+      img.src = plantillaUrl;
+    } else {
       dibujarCombo(ctx, combo, null);
     }
   }, [combo]);
@@ -52,48 +61,51 @@ const Combos = () => {
 
   const handlePublish = async () => {
     if (!combo.nombre || !combo.precio || combo.productos.length === 0) {
-      toast.error('Completa todos los campos');
+      toast.error('Completá nombre, precio y al menos 1 producto');
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       const canvas = canvasRef.current;
       
-      canvas.toBlob(async (blob) => {
-        // Upload to Cloudinary Unsigned Preset
-        const formData = new FormData();
-        formData.append('file', blob);
-        formData.append('upload_preset', 'good_shop_combos');
-        
-        // This should hit Cloudinary directly. 
-        // We'll mock the upload for now since we don't have the Cloudinary keys in frontend env
-        // In a real scenario:
-        /*
-        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: formData
-        }).then(r => r.json());
-        const imageUrl = uploadRes.secure_url;
-        */
-        const imageUrl = 'https://res.cloudinary.com/demo/image/upload/sample.jpg'; // Mock URL
+      // 1. Canvas → Blob
+      const blob = await new Promise(resolve => 
+        canvas.toBlob(resolve, 'image/jpeg', 0.92)
+      );
 
-        // Save combo to database
-        await api.post('/combos', {
-          nombre: combo.nombre,
-          precio: combo.precio,
-          productos: combo.productos.map(p => p.id),
-          imagen_url: imageUrl,
-          isActive: true
-        });
+      // 2. Subir a Cloudinary (unsigned preset)
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+      
+      const formData = new FormData();
+      formData.append('file', blob, `combo-${Date.now()}.jpg`);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('folder', 'good_shop/combos');
 
-        toast.success('✅ Combo publicado en el carrusel');
-        setCombo({ nombre: '', precio: '', productos: [], plantilla: 'dark' });
-      }, 'image/jpeg', 0.9);
+      const cloudRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+      
+      if (!cloudRes.ok) throw new Error('Error subiendo imagen a Cloudinary');
+      const cloudData = await cloudRes.json();
+
+      // 3. Guardar en DB con URL real
+      await api.post('/combos', {
+        nombre: combo.nombre,
+        precio: parseFloat(combo.precio),
+        productos: combo.productos.map(p => p.id),
+        imagen_url: cloudData.secure_url,
+        isActive: true
+      });
+
+      toast.success('✅ Combo publicado en el carrusel');
+      setCombo({ nombre: '', precio: '', productos: [], plantilla: 'dark' });
 
     } catch (error) {
-      toast.error('Error al publicar combo');
+      console.error(error);
+      toast.error('Error al publicar combo: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -143,6 +155,29 @@ const Combos = () => {
                 >
                   {p.name}
                 </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Plantilla Visual
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {['dark', 'sport', 'premium'].map(pl => (
+                <button
+                  key={pl}
+                  type="button"
+                  onClick={() => setCombo(prev => ({ ...prev, plantilla: pl }))}
+                  className={`py-2 rounded text-sm font-bold uppercase tracking-wider 
+                    border transition-all ${
+                    combo.plantilla === pl
+                      ? 'bg-brand border-brand text-white'
+                      : 'bg-dark-900 border-dark-border text-gray-400 hover:border-brand'
+                  }`}
+                >
+                  {pl}
+                </button>
               ))}
             </div>
           </div>

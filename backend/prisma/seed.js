@@ -1,67 +1,76 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Iniciando seed de datos base...');
+  console.log('Iniciando seed...');
 
-  // 1. Settings iniciales
-  const initialSettings = [
-    { key: 'whatsapp_number', value: '5493814000000' },
-    { key: 'tienda_nombre', value: 'Good Shop' },
-    { key: 'tienda_slogan', value: 'Productos Premium' }
-  ];
+  // Credenciales admin
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  await prisma.setting.upsert({
+    where: { key: 'admin_email' },
+    update: {},
+    create: { key: 'admin_email', value: 'admin@goodshop.com' }
+  });
+  await prisma.setting.upsert({
+    where: { key: 'admin_password' },
+    update: {},
+    create: { key: 'admin_password', value: hashedPassword }
+  });
 
-  for (const setting of initialSettings) {
-    await prisma.setting.upsert({
-      where: { key: setting.key },
-      update: { value: setting.value },
-      create: setting,
-    });
-  }
-  console.log('✅ Settings iniciales cargados.');
+  // Config WhatsApp
+  await prisma.setting.upsert({
+    where: { key: 'whatsapp_number' },
+    update: {},
+    create: { key: 'whatsapp_number', value: '5493814000000' }
+  });
+  await prisma.setting.upsert({
+    where: { key: 'tienda_nombre' },
+    update: {},
+    create: { key: 'tienda_nombre', value: 'Good Shop' }
+  });
 
-  // 2. Marcas
+  // Marcas
   const marcas = [
-    'Chemical Guys', 'Koch Chemie', 'Sonax', "Meguiar's", 
-    'Turtle Wax', 'Autoglym', 'Gyeon', 'CarPro'
+    { name: 'Chemical Guys', slug: 'chemical-guys', country: 'USA' },
+    { name: 'Koch Chemie', slug: 'koch-chemie', country: 'Alemania' },
+    { name: 'Sonax', slug: 'sonax', country: 'Alemania' },
+    { name: "Meguiar's", slug: 'meguiars', country: 'USA' },
+    { name: 'Turtle Wax', slug: 'turtle-wax', country: 'USA' },
+    { name: 'Autoglym', slug: 'autoglym', country: 'Reino Unido' },
+    { name: 'Gyeon', slug: 'gyeon', country: 'Corea' },
+    { name: 'CarPro', slug: 'carpro', country: 'España' },
   ];
-
   for (const marca of marcas) {
-    const slug = marca.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     await prisma.brand.upsert({
-      where: { slug },
+      where: { slug: marca.slug },
       update: {},
-      create: { name: marca, slug },
+      create: marca
     });
   }
-  console.log('✅ Marcas cargadas.');
 
-  // 3. Categorías
+  // Categorías
   const categorias = [
-    'Shampoo', 'Cera', 'Sellador', 'Coating', 'Pulidor', 
-    'Microfibra', 'Guante', 'Balde', 'Aplicador', 'Quick Detailer', 
-    'Desengrasante', 'Limpiador Llantas', 'Limpiador Vidrios', 
-    'Cuero', 'Accesorios', 'Kits'
+    'Shampoo', 'Cera', 'Sellador', 'Coating', 'Pulidor',
+    'Microfibra', 'Guante', 'Balde', 'Aplicador',
+    'Quick Detailer', 'Desengrasante', 'Limpiador Llantas',
+    'Limpiador Vidrios', 'Cuero', 'Accesorios', 'Kits'
   ];
-
-  for (const cat of categorias) {
-    const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  for (const nombre of categorias) {
+    const slug = nombre.toLowerCase()
+      .replace(/\s+/g, '-')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
     await prisma.category.upsert({
       where: { slug },
       update: {},
-      create: { name: cat, slug },
+      create: { name: nombre, slug }
     });
   }
-  console.log('✅ Categorías cargadas.');
 
-  console.log('🎉 Seed finalizado exitosamente.');
+  console.log('✅ Seed completado');
 }
 
 main()
-  .catch((e) => {
-    console.error('Error durante el seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(e => { console.error(e); process.exit(1); })
+  .finally(() => prisma.$disconnect());

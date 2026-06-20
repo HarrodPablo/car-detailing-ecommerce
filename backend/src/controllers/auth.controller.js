@@ -1,23 +1,38 @@
-const { generateToken } = require('../utils/jwt.utils');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const prisma = require('../prisma/client');
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
-  
-  // Hardcoded simple admin for this case since User model is not present
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@detailinghub.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  try {
+    const { email, password } = req.body;
+    console.log('BODY RECIBIDO:', { email, password }); // TEMP
 
-  if (email === adminEmail && password === adminPassword) {
-    const user = {
-      id: 1,
-      name: 'Admin',
-      email: adminEmail,
-      role: 'ADMIN'
-    };
-    const token = generateToken(user);
-    res.json({ user, token });
-  } else {
-    res.status(401).json({ message: 'Credenciales inválidas' });
+    const adminEmail = await prisma.setting.findFirst({ where: { key: 'admin_email' } });
+    const adminPassword = await prisma.setting.findFirst({ where: { key: 'admin_password' } });
+
+    console.log('DB email:', adminEmail?.value); // TEMP
+    console.log('Email match?:', email === adminEmail?.value); // TEMP
+
+    if (!adminEmail || email !== adminEmail.value) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    const valid = await bcrypt.compare(password, adminPassword.value);
+    console.log('Password match?:', valid); // TEMP
+
+    if (!valid) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+    
+    const token = jwt.sign(
+      { email, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({ token, user: { email, role: 'admin' } });
+  } catch (error) {
+    res.status(500).json({ error: 'Error en el servidor' });
   }
 };
 

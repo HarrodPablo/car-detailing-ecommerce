@@ -1,5 +1,5 @@
 const express = require('express');
-const { getLotsByProductId, createLot, updateLot, deleteLot } = require('../controllers/lotController');
+const { getLotsByProductId, createLot, updateLot, deleteLot } = require('../controllers/lots.controller');
 const { authenticate, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();

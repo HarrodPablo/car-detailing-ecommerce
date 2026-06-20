@@ -1,5 +1,5 @@
 import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
-import useCartStore from '../../store/cartStore';
+import useCartStore from '../../store/cart.store';
 import { useEffect } from 'react';
 
 const CartDrawer = () => {

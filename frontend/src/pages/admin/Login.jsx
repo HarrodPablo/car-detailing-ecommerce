@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import api from '../../lib/axios';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../../store/auth.store';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),

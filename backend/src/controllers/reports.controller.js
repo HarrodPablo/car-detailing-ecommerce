@@ -1,71 +1,66 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prisma/client');
 
-const getVentasReport = async (req, res, next) => {
+const getVentasReport = async (req, res) => {
   try {
-    const orders = await prisma.order.findMany({
-      where: { status: { not: 'cancelado' } },
-      select: { total: true, createdAt: true }
-    });
-    
-    // Group by date (simple implementation)
-    const grouped = orders.reduce((acc, order) => {
-      const date = order.createdAt.toISOString().split('T')[0];
-      if (!acc[date]) acc[date] = 0;
-      acc[date] += Number(order.total);
-      return acc;
-    }, {});
+    // Generate simple last 7 days chart
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }).reverse();
 
-    const report = Object.keys(grouped).map(date => ({
-      date,
-      total: grouped[date]
-    })).sort((a, b) => a.date.localeCompare(b.date));
+    const chartData = [];
+
+    for (let i = 0; i < last7Days.length; i++) {
+      const start = last7Days[i];
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+
+      const orders = await prisma.order.findMany({
+        where: { createdAt: { gte: start, lt: end } }
+      });
+
+      chartData.push({
+        date: start.toISOString().split('T')[0],
+        total: orders.reduce((sum, o) => sum + o.total, 0)
+      });
+    }
+
+    res.json(chartData);
+  } catch (error) {
+    res.status(500).json({ message: 'Error obteniendo chart', error });
+  }
+};
+
+const getMarcasReport = async (req, res) => {
+  try {
+    const brands = await prisma.brand.findMany({
+      include: {
+        products: {
+          include: {
+            orderItems: {
+              include: { order: true }
+            }
+          }
+        }
+      }
+    });
+
+    const report = brands.map(brand => {
+      const sales = brand.products.reduce((sum, p) => {
+        return sum + p.orderItems.reduce((s, i) => s + i.quantity, 0);
+      }, 0);
+      return { name: brand.name, sales };
+    }).sort((a, b) => b.sales - a.sales);
 
     res.json(report);
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Error obteniendo reporte de marcas', error });
   }
 };
 
-const getMarcasReport = async (req, res, next) => {
-  try {
-    const products = await prisma.product.findMany({
-      include: { brand: true, orderItems: { include: { order: true } } }
-    });
-
-    const report = {};
-    products.forEach(p => {
-      const brandName = p.brand.name;
-      if (!report[brandName]) report[brandName] = 0;
-      
-      const sales = p.orderItems.reduce((acc, item) => {
-        if (item.order.status !== 'cancelado') return acc + item.quantity;
-        return acc;
-      }, 0);
-      
-      report[brandName] += sales;
-    });
-
-    const formatted = Object.keys(report).map(name => ({
-      name, sales: report[name]
-    })).sort((a, b) => b.sales - a.sales);
-
-    res.json(formatted);
-  } catch (error) {
-    next(error);
-  }
+module.exports = {
+  getVentasReport,
+  getMarcasReport
 };
-
-const getJuntosReport = async (req, res, next) => {
-  try {
-    // A simplified mock of 'comprados juntos'
-    res.json([
-      { products: "Shampoo XYZ + Microfibra ABC", count: 15 },
-      { products: "Cera Carnauba + Aplicador", count: 12 },
-    ]);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = { getVentasReport, getMarcasReport, getJuntosReport };

@@ -4,14 +4,13 @@ import { persist } from 'zustand/middleware';
 const useAuthStore = create(
   persist(
     (set) => ({
-      user: null,
       token: null,
-      setAuth: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
+      user: null,
+      isAuthenticated: false,
+      login: (token, user) => set({ token, user, isAuthenticated: true }),
+      logout: () => set({ token: null, user: null, isAuthenticated: false }),
     }),
-    {
-      name: 'auth-storage',
-    }
+    { name: 'good-shop-auth' }
   )
 );
 
