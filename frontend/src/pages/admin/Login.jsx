@@ -15,7 +15,7 @@ const loginSchema = z.object({
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const login = useAuthStore((state) => state.login);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema)
@@ -25,7 +25,7 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await api.post('/auth/login', data);
-      setAuth(res.data.user, res.data.token);
+      login(res.data.token, res.data.user);
       toast.success('Sesión iniciada correctamente');
       navigate('/admin');
     } catch (error) {
@@ -46,9 +46,9 @@ const Login = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2 dark:text-gray-200">Email</label>
-            <input 
+            <input
               {...register('email')}
-              type="email" 
+              type="email"
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-900 focus:ring-2 focus:ring-primary-light outline-none transition-all dark:text-white"
               placeholder="admin@detailinghub.com"
             />
@@ -57,17 +57,17 @@ const Login = () => {
 
           <div>
             <label className="block text-sm font-medium mb-2 dark:text-gray-200">Contraseña</label>
-            <input 
+            <input
               {...register('password')}
-              type="password" 
+              type="password"
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-dark-900 focus:ring-2 focus:ring-primary-light outline-none transition-all dark:text-white"
               placeholder="••••••••"
             />
             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full btn-primary py-3"
           >
