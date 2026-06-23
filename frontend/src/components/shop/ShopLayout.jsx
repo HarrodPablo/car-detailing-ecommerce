@@ -1,6 +1,7 @@
 import { Outlet, Link } from 'react-router-dom';
 import { ShoppingCart, Menu } from 'lucide-react';
 import useCartStore from '../../store/cart.store';
+import logoImg from '../../assets/goodshop.svg';
 
 const ShopLayout = () => {
   const { items, getCartTotal } = useCartStore();
@@ -11,8 +12,8 @@ const ShopLayout = () => {
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button className="md:hidden text-white"><Menu /></button>
-            <Link to="/" className="text-3xl font-heading font-bold text-white tracking-wider">
-              GOOD <span className="text-brand">SHOP</span>
+            <Link to="/" className="flex items-center">
+              <img src={logoImg} alt="Good Shop Logo" className="h-8 brightness-0 invert" />
             </Link>
             <nav className="hidden md:flex gap-6 ml-8">
               <Link to="/" className="text-gray-300 hover:text-white uppercase text-sm font-bold tracking-wide">Inicio</Link>

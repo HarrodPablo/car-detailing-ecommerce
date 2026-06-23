@@ -56,4 +56,18 @@ const deleteCombo = async (req, res) => {
   }
 };
 
-module.exports = { getCombos, createCombo, deleteCombo };
+// GET /api/combos/:id — público
+const getComboById = async (req, res) => {
+  try {
+    const kit = await prisma.kit.findUnique({
+      where: { id: parseInt(req.params.id) },
+      include: { items: { include: { product: { include: { images: true, brand: true } } } } }
+    });
+    if (!kit) return res.status(404).json({ error: 'Combo no encontrado' });
+    res.json(kit);
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo combo' });
+  }
+};
+
+module.exports = { getCombos, getComboById, createCombo, deleteCombo };

@@ -1,10 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
+const cloudinary = require('../utils/cloudinary.config');
 const prisma = new PrismaClient();
 
 const getProducts = async (req, res, next) => {
   try {
     const { brandId, categoryId, isActive, isFeatured, isNew, isOffer } = req.query;
-    
+
     const where = {};
     if (brandId) where.brandId = Number(brandId);
     if (categoryId) where.categoryId = Number(categoryId);
@@ -18,7 +19,7 @@ const getProducts = async (req, res, next) => {
       include: {
         brand: true,
         category: true,
-        images: { orderBy: { sortOrder: 'asc' } },
+        images: true,
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -35,8 +36,7 @@ const getProductBySlug = async (req, res, next) => {
       include: {
         brand: true,
         category: true,
-        images: { orderBy: { sortOrder: 'asc' } },
-        lots: true
+        images: true,
       }
     });
     if (!product) {
@@ -52,32 +52,36 @@ const getProductBySlug = async (req, res, next) => {
 const createProduct = async (req, res, next) => {
   try {
     const {
-      name, slug, sku, brandId, categoryId, shortDescription, longDescription,
-      costPrice, salePrice, stock, minStock, surfaceCompatible,
-      applicationType, contentAmount, contentUnit, isActive, isFeatured, isOffer, isNew, images
+      name, slug, sku, description, brandId, categoryId, costPrice, salePrice, stock, minStock
     } = req.body;
+
+    const productSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 1000);
+
+    if (!brandId || !categoryId) {
+      return res.status(400).json({ error: 'La marca y la categoría son requeridas' });
+    }
 
     const newProduct = await prisma.product.create({
       data: {
-        name, slug, sku, brandId: Number(brandId), categoryId: Number(categoryId),
-        shortDescription, longDescription,
-        costPrice: Number(costPrice), salePrice: Number(salePrice),
-        stock: Number(stock), minStock: Number(minStock),
-        surfaceCompatible: surfaceCompatible || null,
-        applicationType, contentAmount: contentAmount ? Number(contentAmount) : null,
-        contentUnit, isActive, isFeatured, isOffer, isNew,
-        images: {
-          create: images && images.length > 0 ? images.map((url, idx) => ({
-            url,
-            isPrimary: idx === 0,
-            sortOrder: idx
-          })) : []
-        }
+        name,
+        slug: productSlug,
+        sku,
+        longDescription: description || null,
+        brandId: Number(brandId),
+        categoryId: Number(categoryId),
+        costPrice: costPrice ? Number(costPrice) : 0,
+        salePrice: Number(salePrice),
+        stock: stock ? Number(stock) : 0,
+        minStock: minStock ? Number(minStock) : 5,
+        images: req.file ? {
+          create: [{ url: req.file.path, publicId: req.file.filename, isPrimary: true }]
+        } : undefined
       },
-      include: { images: true }
+      include: { brand: true, category: true, images: true }
     });
     res.status(201).json(newProduct);
   } catch (error) {
+    console.error("CREATE PRODUCT ERROR:", error);
     next(error);
   }
 };
@@ -85,22 +89,94 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body };
-    delete updateData.id;
-    if (updateData.brandId) updateData.brandId = Number(updateData.brandId);
-    if (updateData.categoryId) updateData.categoryId = Number(updateData.categoryId);
-    if (updateData.costPrice) updateData.costPrice = Number(updateData.costPrice);
-    if (updateData.salePrice) updateData.salePrice = Number(updateData.salePrice);
-    if (updateData.stock) updateData.stock = Number(updateData.stock);
-    if (updateData.minStock) updateData.minStock = Number(updateData.minStock);
-    if (updateData.contentAmount) updateData.contentAmount = Number(updateData.contentAmount);
+    const {
+      name, slug, sku, description, brandId, categoryId, costPrice, salePrice, stock, minStock
+    } = req.body;
 
-    // Handle images manually if needed, or assume they are managed separately
-    delete updateData.images; 
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (slug) updateData.slug = slug;
+    if (sku) updateData.sku = sku;
+    if (description !== undefined) updateData.longDescription = description || null;
+    if (brandId !== undefined) updateData.brandId = Number(brandId);
+    if (categoryId !== undefined) updateData.categoryId = Number(categoryId);
+    if (costPrice !== undefined) updateData.costPrice = costPrice ? Number(costPrice) : 0;
+    if (salePrice !== undefined) updateData.salePrice = Number(salePrice);
+    if (stock !== undefined) updateData.stock = Number(stock);
+    if (minStock !== undefined) updateData.minStock = Number(minStock);
+
+    if (req.file) {
+      const existingImages = await prisma.productImage.findMany({
+        where: { productId: Number(id) }
+      });
+
+      for (const img of existingImages) {
+        if (img.publicId) {
+          try {
+            await cloudinary.uploader.destroy(img.publicId);
+          } catch (err) {
+            console.error('Error deleting image from Cloudinary:', err);
+          }
+        }
+      }
+
+      await prisma.productImage.deleteMany({
+        where: { productId: Number(id) }
+      });
+      updateData.images = {
+        create: [{
+          url: req.file.path,
+          publicId: req.file.filename
+        }]
+      };
+    }
 
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) },
-      data: updateData
+      data: updateData,
+      include: { brand: true, category: true, images: true }
+    });
+    res.json(updatedProduct);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProductImage = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!req.file) {
+      res.status(400);
+      throw new Error('No image provided');
+    }
+    const existingImages = await prisma.productImage.findMany({
+      where: { productId: Number(id) }
+    });
+
+    for (const img of existingImages) {
+      if (img.publicId) {
+        try {
+          await cloudinary.uploader.destroy(img.publicId);
+        } catch (err) {
+          console.error('Error deleting image from Cloudinary:', err);
+        }
+      }
+    }
+
+    await prisma.productImage.deleteMany({
+      where: { productId: Number(id) }
+    });
+    const updatedProduct = await prisma.product.update({
+      where: { id: Number(id) },
+      data: {
+        images: {
+          create: [{
+            url: req.file.path,
+            publicId: req.file.filename
+          }]
+        }
+      },
+      include: { brand: true, category: true, images: true }
     });
     res.json(updatedProduct);
   } catch (error) {
@@ -110,6 +186,20 @@ const updateProduct = async (req, res, next) => {
 
 const deleteProduct = async (req, res, next) => {
   try {
+    const existingImages = await prisma.productImage.findMany({
+      where: { productId: Number(req.params.id) }
+    });
+
+    await Promise.all(
+      existingImages
+        .filter(img => img.publicId)
+        .map(img =>
+          cloudinary.uploader.destroy(img.publicId).catch(err => {
+            console.error('Error deleting image from Cloudinary:', err);
+          })
+        )
+    );
+
     await prisma.product.delete({
       where: { id: Number(req.params.id) }
     });
@@ -120,5 +210,5 @@ const deleteProduct = async (req, res, next) => {
 };
 
 module.exports = {
-  getProducts, getProductBySlug, createProduct, updateProduct, deleteProduct
+  getProducts, getProductBySlug, createProduct, updateProduct, updateProductImage, deleteProduct
 };

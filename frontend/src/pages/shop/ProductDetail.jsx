@@ -115,10 +115,28 @@ const ProductDetail = () => {
           <div className="border-t border-dark-border pt-8 mt-auto">
             <div className="flex items-center gap-4 mb-4">
               <span className="text-gray-400 text-sm uppercase tracking-wider font-bold">Cantidad</span>
-              <div className="flex items-center border border-dark-border rounded-sm bg-dark-900">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-gray-400 hover:text-white">-</button>
-                <span className="w-12 text-center text-white font-mono">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-gray-400 hover:text-white">+</button>
+              <div className="flex items-center border border-dark-border rounded-sm bg-dark-900 overflow-hidden">
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">-</button>
+                <input 
+                  type="number" 
+                  min="1" 
+                  max={product.stock} 
+                  value={quantity} 
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (isNaN(val)) {
+                      setQuantity('');
+                    } else {
+                      setQuantity(Math.min(product.stock, Math.max(1, val)));
+                    }
+                  }}
+                  onBlur={() => {
+                    if (quantity === '' || quantity < 1) setQuantity(1);
+                  }}
+                  className="w-14 text-center text-white font-mono bg-transparent outline-none appearance-none"
+                  style={{ MozAppearance: 'textfield' }}
+                />
+                <button onClick={() => setQuantity(Math.min(product.stock, quantity + 1))} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">+</button>
               </div>
               <span className="text-sm text-gray-500">{product.stock} disponibles</span>
             </div>

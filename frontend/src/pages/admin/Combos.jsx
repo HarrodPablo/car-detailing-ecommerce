@@ -1,19 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { dibujarCombo } from '../../utils/canvasCombo';
+import { useGenerativeBackground } from '../../hooks/useGenerativeBackground';
+import { useProductCutouts } from '../../hooks/useProductCutouts';
 import api from '../../lib/axios';
-import { PLANTILLAS } from '../../utils/plantillas';
+import { dibujarCombo } from '../../utils/canvasCombo';
 
 const Combos = () => {
   const canvasRef = useRef(null);
   const [combo, setCombo] = useState({
     nombre: '',
     precio: '',
-    productos: [],
-    plantilla: 'dark' // dark, sport, premium
+    productos: []
   });
   const [availableProducts, setAvailableProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const { cutouts, isProcessing } = useProductCutouts(combo.productos);
+  const { backgroundUrl, status: bgStatus } = useGenerativeBackground(combo.nombre);
+
+  const filteredProducts = availableProducts.filter(p =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -29,20 +36,29 @@ const Combos = () => {
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    
+
     const ctx = canvasRef.current.getContext('2d');
-    const plantillaUrl = PLANTILLAS[combo.plantilla];
-    
-    if (plantillaUrl) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => dibujarCombo(ctx, combo, img);
-      img.onerror = () => dibujarCombo(ctx, combo, null);
-      img.src = plantillaUrl;
-    } else {
-      dibujarCombo(ctx, combo, null);
-    }
-  }, [combo]);
+
+    const render = async () => {
+      if (backgroundUrl && bgStatus === 'ready') {
+        const img = new Image();
+        // IMPORTANTE: Esto es lo que previene el error "Tainted Canvas"
+        // ya que Pollinations envía el header Access-Control-Allow-Origin: *
+        img.crossOrigin = 'anonymous';
+        img.onload = async () => {
+          await dibujarCombo(ctx, combo, img, cutouts, 'ready');
+        };
+        img.onerror = async () => {
+          await dibujarCombo(ctx, combo, null, cutouts, 'error');
+        };
+        img.src = backgroundUrl;
+      } else {
+        await dibujarCombo(ctx, combo, null, cutouts, bgStatus);
+      }
+    };
+
+    render();
+  }, [combo, cutouts, backgroundUrl, bgStatus]);
 
   const toggleProduct = (prod) => {
     setCombo(prev => {
@@ -68,16 +84,20 @@ const Combos = () => {
     setLoading(true);
     try {
       const canvas = canvasRef.current;
-      
+
       // 1. Canvas → Blob
-      const blob = await new Promise(resolve => 
+      const blob = await new Promise(resolve =>
         canvas.toBlob(resolve, 'image/jpeg', 0.92)
       );
+
+      if (!blob) {
+        throw new Error('Tainted Canvas o Blob vacío. Revisa CORS.');
+      }
 
       // 2. Subir a Cloudinary (unsigned preset)
       const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-      
+
       const formData = new FormData();
       formData.append('file', blob, `combo-${Date.now()}.jpg`);
       formData.append('upload_preset', uploadPreset);
@@ -87,8 +107,12 @@ const Combos = () => {
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         { method: 'POST', body: formData }
       );
-      
-      if (!cloudRes.ok) throw new Error('Error subiendo imagen a Cloudinary');
+
+      if (!cloudRes.ok) {
+        const errData = await cloudRes.json().catch(() => ({}));
+        console.error("Cloudinary error devuelto:", errData);
+        throw new Error(`Cloudinary: ${errData.error?.message || 'Bad Request'}`);
+      }
       const cloudData = await cloudRes.json();
 
       // 3. Guardar en DB con URL real
@@ -101,7 +125,7 @@ const Combos = () => {
       });
 
       toast.success('✅ Combo publicado en el carrusel');
-      setCombo({ nombre: '', precio: '', productos: [], plantilla: 'dark' });
+      setCombo({ nombre: '', precio: '', productos: [] });
 
     } catch (error) {
       console.error(error);
@@ -121,83 +145,117 @@ const Combos = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="glass-card p-6 space-y-6">
           <h2 className="text-xl font-bold text-white border-b border-dark-border pb-2">Datos del Combo</h2>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Nombre del Combo</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="w-full bg-dark-900 border border-dark-border rounded px-4 py-2 text-white focus:outline-none focus:border-brand"
               value={combo.nombre}
-              onChange={e => setCombo({...combo, nombre: e.target.value})}
+              onChange={e => setCombo({ ...combo, nombre: e.target.value })}
               placeholder="EJ: COMBO LAVADO PREMIUM"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Precio Total ($)</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               className="w-full bg-dark-900 border border-dark-border rounded px-4 py-2 text-white focus:outline-none focus:border-brand"
               value={combo.precio}
-              onChange={e => setCombo({...combo, precio: e.target.value})}
+              onChange={e => setCombo({ ...combo, precio: e.target.value })}
               placeholder="95000"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Productos (máx 4)</label>
+
+            {/* Chips de seleccionados */}
+            {combo.productos.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {combo.productos.map(p => (
+                  <span key={`chip-${p.id}`} className="bg-brand/20 text-brand text-xs px-2 py-1 rounded flex items-center gap-1 border border-brand/50">
+                    {p.name}
+                    <button type="button" onClick={() => toggleProduct(p)} className="hover:text-white ml-1 font-bold">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Buscador */}
+            <input
+              type="text"
+              placeholder="Buscar productos por nombre..."
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              className="w-full bg-dark-900 border border-dark-border rounded px-4 py-2 text-white focus:outline-none focus:border-brand mb-2 text-sm"
+            />
+
+            {/* Lista */}
             <div className="max-h-60 overflow-y-auto border border-dark-border rounded bg-dark-900 p-2 space-y-1">
-              {availableProducts.map(p => (
-                <div 
-                  key={p.id} 
-                  onClick={() => toggleProduct(p)}
-                  className={`p-2 rounded cursor-pointer transition-colors text-sm ${combo.productos.find(x => x.id === p.id) ? 'bg-brand/20 border border-brand text-brand font-medium' : 'hover:bg-dark-border text-gray-400'}`}
-                >
-                  {p.name}
-                </div>
-              ))}
+              {filteredProducts.map(p => {
+                const isSelected = combo.productos.some(x => x.id === p.id);
+                const isMaxReached = combo.productos.length >= 4 && !isSelected;
+
+                let thumbUrl = null;
+                if (p.images && p.images.length > 0) {
+                  const primary = p.images.find(img => img.isPrimary) || p.images[0];
+                  thumbUrl = primary.url;
+                }
+
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => {
+                      if (!isMaxReached) toggleProduct(p);
+                      else if (isSelected) toggleProduct(p);
+                      else toast.error('Máximo 4 productos por combo');
+                    }}
+                    className={`p-2 rounded transition-colors text-sm flex items-center gap-3
+                      ${isSelected ? 'bg-brand/20 border border-brand text-brand font-medium' : 'hover:bg-dark-border text-gray-400 border border-transparent'}
+                      ${isMaxReached ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    `}
+                  >
+                    {thumbUrl ? (
+                      <img src={thumbUrl} alt="" className="w-8 h-8 object-cover rounded bg-dark-800" />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-dark-800 flex items-center justify-center text-[10px] text-gray-500">Sin img</div>
+                    )}
+                    <span className="flex-1 truncate">{p.name}</span>
+                  </div>
+                );
+              })}
+              {filteredProducts.length === 0 && (
+                <div className="p-4 text-center text-gray-500 text-sm">No hay productos que coincidan</div>
+              )}
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Plantilla Visual
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {['dark', 'sport', 'premium'].map(pl => (
-                <button
-                  key={pl}
-                  type="button"
-                  onClick={() => setCombo(prev => ({ ...prev, plantilla: pl }))}
-                  className={`py-2 rounded text-sm font-bold uppercase tracking-wider 
-                    border transition-all ${
-                    combo.plantilla === pl
-                      ? 'bg-brand border-brand text-white'
-                      : 'bg-dark-900 border-dark-border text-gray-400 hover:border-brand'
-                  }`}
-                >
-                  {pl}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button 
+          <button
             onClick={handlePublish}
-            disabled={loading}
+            disabled={loading || isProcessing}
             className="w-full btn-primary"
           >
-            {loading ? 'Publicando...' : 'Publicar Combo'}
+            {loading ? 'Publicando...' : isProcessing ? 'Procesando fotos...' : 'Publicar Combo'}
           </button>
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-white">Vista Previa</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">Vista Previa</h2>
+            {bgStatus === 'loading' && (
+              <div className="text-brand text-sm flex items-center gap-2">
+                <span className="w-2 h-2 bg-brand rounded-full animate-pulse"></span>
+                Generando fondo IA...
+              </div>
+            )}
+          </div>
           <div className="border border-dark-border rounded-lg overflow-hidden bg-dark-card shadow-2xl">
-            <canvas 
-              ref={canvasRef} 
-              width={800} 
-              height={450} 
+            <canvas
+              ref={canvasRef}
+              width={800}
+              height={450}
               className="w-full h-auto"
             />
           </div>

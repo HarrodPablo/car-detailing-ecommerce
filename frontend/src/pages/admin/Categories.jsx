@@ -8,7 +8,7 @@ import Modal from '../../components/ui/Modal';
 
 const CategoriesAdmin = () => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('categories'); // 'categories' or 'brands'
+  const [activeTab, setActiveTab] = useState('categories'); 
   
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -19,7 +19,7 @@ const CategoriesAdmin = () => {
   const { register: registerCat, handleSubmit: handleSubmitCat, reset: resetCat } = useForm();
   const { register: registerBrand, handleSubmit: handleSubmitBrand, reset: resetBrand } = useForm();
 
-  // Queries
+  
   const { data: categories, isLoading: loadingCat } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => (await api.get('/categories')).data
@@ -30,7 +30,7 @@ const CategoriesAdmin = () => {
     queryFn: async () => (await api.get('/brands')).data
   });
 
-  // Category Mutations
+  
   const createCategory = useMutation({
     mutationFn: (data) => api.post('/categories', data),
     onSuccess: () => {

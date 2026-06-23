@@ -18,7 +18,7 @@ const DashboardWidget = ({ title, value, icon: Icon, colorClass }) => (
 
 const Dashboard = () => {
   const [reports, setReports] = useState({
-    ventas: [],
+    ventas: { chartData: [], totalPedidos: 0, totalVentas: 0 },
     marcas: []
   });
   const [alerts, setAlerts] = useState({ stock: [], lotes: [] });
@@ -55,8 +55,6 @@ const Dashboard = () => {
 
   if (loading) return <div className="text-center py-20">Cargando dashboard...</div>;
 
-  const totalVentas = reports.ventas.reduce((acc, curr) => acc + curr.total, 0);
-
   return (
     <div className="space-y-8">
       <div>
@@ -68,13 +66,13 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardWidget 
           title="Ventas Totales" 
-          value={formatCurrency(totalVentas)} 
+          value={formatCurrency(reports.ventas.totalVentas || 0)} 
           icon={DollarSign} 
           colorClass="bg-green-500 text-green-500" 
         />
         <DashboardWidget 
           title="Pedidos" 
-          value={reports.ventas.length} 
+          value={reports.ventas.totalPedidos || 0} 
           icon={ShoppingCart} 
           colorClass="bg-blue-500 text-blue-500" 
         />
@@ -98,7 +96,7 @@ const Dashboard = () => {
           <h2 className="text-xl font-heading font-bold text-white mb-6">Ventas de la Semana</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reports.ventas.slice(-7)}>
+              <BarChart data={reports.ventas.chartData.slice(-7)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
                 <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
                 <YAxis stroke="#6B7280" fontSize={12} tickFormatter={(val) => `$${val}`} />
@@ -112,15 +110,21 @@ const Dashboard = () => {
         <div className="glass-card p-6">
           <h2 className="text-xl font-heading font-bold text-white mb-6">Marcas más vendidas</h2>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reports.marcas.slice(0, 5)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
-                <XAxis type="number" stroke="#6B7280" fontSize={12} />
-                <YAxis dataKey="name" type="category" stroke="#6B7280" fontSize={12} width={100} />
-                <Tooltip cursor={{fill: '#1a1a1a'}} contentStyle={{backgroundColor: '#111111', borderColor: '#2D2D2D'}} />
-                <Bar dataKey="sales" fill="#8B0000" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {reports.marcas.length === 0 || reports.marcas.every(m => m.sales === 0) ? (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                Sin ventas registradas
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={reports.marcas.slice(0, 5)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
+                  <XAxis type="number" stroke="#6B7280" fontSize={12} allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" stroke="#6B7280" fontSize={12} width={100} />
+                  <Tooltip cursor={{fill: '#1a1a1a'}} contentStyle={{backgroundColor: '#111111', borderColor: '#2D2D2D'}} />
+                  <Bar dataKey="sales" fill="#8B0000" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

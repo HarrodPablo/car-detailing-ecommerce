@@ -46,6 +46,7 @@ app.use('/api/reports', require('./routes/reports.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/alerts', require('./routes/alerts.routes'));
 app.use('/api/lots', require('./routes/lots.routes')); // Added lots since it exists
+app.use('/api/remove-bg', require('./routes/removebg.routes'));
 
 // Error Middlewares
 app.use(notFound);

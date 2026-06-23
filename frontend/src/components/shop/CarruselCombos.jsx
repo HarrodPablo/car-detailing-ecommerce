@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CarruselCombos = ({ combos }) => {
@@ -24,29 +25,21 @@ const CarruselCombos = ({ combos }) => {
   return (
     <div className="relative">
       {/* Imagen principal */}
-      <div className="relative rounded-xl overflow-hidden 
-                      border border-dark-border aspect-video 
-                      max-w-3xl mx-auto">
+      <Link 
+        to={`/combos/${combos[actual].id}`}
+        className="relative block rounded-xl overflow-hidden 
+                   border border-dark-border aspect-video 
+                   max-w-3xl mx-auto cursor-pointer group"
+      >
         <img
           key={combos[actual].id}
           src={combos[actual].imageUrl || combos[actual].imagen_url}
           alt={combos[actual].name || combos[actual].nombre}
-          className="w-full h-full object-cover transition-opacity 
-                     duration-500"
+          className="w-full h-full object-cover transition-transform 
+                     duration-700 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t 
-                        from-black/50 to-transparent" />
-        <div className="absolute bottom-4 left-4">
-          <p className="text-white font-heading font-bold text-2xl">
-            {combos[actual].name || combos[actual].nombre}
-          </p>
-          {combos[actual].kitPrice && (
-            <p className="text-brand font-mono font-bold text-xl">
-              ${Number(combos[actual].kitPrice).toLocaleString('es-AR')}
-            </p>
-          )}
-        </div>
-      </div>
+        {console.log('combo actual:', combos[actual])}
+      </Link>
 
       {/* Controles — solo si hay más de 1 */}
       {combos.length > 1 && (
