@@ -1,4 +1,5 @@
 const prisma = require('../prisma/client');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const parseDateRange = (query) => {
   const { desde, hasta } = query;
@@ -244,10 +245,46 @@ const getMarcasReport = async (req, res) => {
   }
 };
 
+const analizarIA = async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: 'IA no configurada' });
+    }
+
+    const { resumen, productosTop, marcas, gastosTotales, periodo } = req.body;
+    
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      systemInstruction: 'Sos un analista de negocios especializado en ecommerce de productos de detailing automotriz argentino.'
+    });
+
+    const prompt = `Analizá estos datos del período ${periodo}:
+- Facturación: $${resumen?.facturacion || 0}
+- Pedidos: ${resumen?.pedidos || 0}
+- Ticket promedio: $${resumen?.ticketPromedio || 0}
+- Gastos del período: $${gastosTotales || 0}
+- Ganancia estimada: $${(resumen?.facturacion || 0) - (gastosTotales || 0)}
+- Top productos: ${productosTop?.map(p => p.name + ': ' + p.cantidad + ' unidades').join(', ')}
+- Top marcas: ${marcas?.slice(0,3).map(m => m.name + ': $' + m.sales).join(', ')}
+
+Devolvé un análisis en español con: 1 conclusión principal en negrita, 2-3 observaciones clave y 1-2 recomendaciones accionables. Máximo 180 palabras. Sin tecnicismos.`;
+
+    const result = await model.generateContent(prompt);
+    const text = await result.response.text();
+    
+    res.json({ analisis: text });
+  } catch (error) {
+    console.error('Error en analizarIA:', error);
+    res.status(500).json({ error: 'Error generando análisis' });
+  }
+};
+
 module.exports = {
   getVentasReport,
   getMarcasReport,
   getResumenReport,
   getProductosTopReport,
-  getCategoriasReport
+  getCategoriasReport,
+  analizarIA
 };

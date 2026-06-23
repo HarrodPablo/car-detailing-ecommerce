@@ -144,3 +144,15 @@ model Setting {
   key   String @unique
   value String
 }
+
+model Gasto {
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime @default(now())
+  descripcion String
+  monto       Decimal  @db.Decimal(10,2)
+  categoria   String   @default("general")
+  proveedor   String?
+  facturaUrl  String?
+  items       Json?    // Array de líneas extraídas de la factura
+  createdAt   DateTime @default(now())
+}
