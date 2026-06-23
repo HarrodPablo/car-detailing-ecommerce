@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar, CreditCard } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, CreditCard, Sparkles, Receipt, RefreshCw, HandCoins } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../lib/axios';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 

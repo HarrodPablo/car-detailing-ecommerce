@@ -7,7 +7,8 @@ import {
   Package,
   Settings,
   ShoppingCart,
-  Tags
+  Tags,
+  Receipt
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -59,6 +60,7 @@ const AdminLayout = () => {
           <SidebarItem icon={ImageIcon} label="Creador Combos" to="/admin/combos" />
           <SidebarItem icon={ShoppingCart} label="Pedidos" to="/admin/orders" />
           <SidebarItem icon={BarChart3} label="Reportes" to="/admin/reports" />
+          <SidebarItem icon={Receipt} label="Gastos" to="/admin/gastos" />
           <SidebarItem icon={Tags} label="Marcas" to="/admin/brands" />
           <SidebarItem icon={Tags} label="Categorías" to="/admin/categories" />
           <SidebarItem icon={Settings} label="Configuración" to="/admin/settings" />

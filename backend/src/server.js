@@ -43,6 +43,7 @@ app.use('/api/kits', require('./routes/kits.routes'));
 app.use('/api/combos', require('./routes/combos.routes'));
 app.use('/api/orders', require('./routes/orders.routes'));
 app.use('/api/reports', require('./routes/reports.routes'));
+app.use('/api/gastos', require('./routes/gastos.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/alerts', require('./routes/alerts.routes'));
 app.use('/api/lots', require('./routes/lots.routes')); // Added lots since it exists

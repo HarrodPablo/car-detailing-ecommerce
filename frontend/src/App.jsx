@@ -8,6 +8,7 @@ import Login from './pages/admin/Login';
 import OrdersAdmin from './pages/admin/Orders';
 import ProductsAdmin from './pages/admin/Products';
 import ReportsAdmin from './pages/admin/Reports';
+import GastosAdmin from './pages/admin/Gastos';
 
 import ShopLayout from './components/shop/ShopLayout';
 import Cart from './pages/shop/Cart';
@@ -56,6 +57,7 @@ function App() {
               <Route path="combos" element={<CombosAdmin />} />
               <Route path="orders" element={<OrdersAdmin />} />
               <Route path="reports" element={<ReportsAdmin />} />
+              <Route path="gastos" element={<GastosAdmin />} />
               <Route path="settings" element={<SettingsAdmin />} />
             </Route>
 
