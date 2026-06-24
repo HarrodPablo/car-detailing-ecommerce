@@ -5,13 +5,15 @@ import api from '../../lib/axios';
 import { formatCurrency } from '../../utils/formatters';
 
 const DashboardWidget = ({ title, value, icon: Icon, colorClass }) => (
-  <div className="glass-card p-6 flex items-center justify-between">
-    <div>
-      <p className="text-gray-400 text-sm font-medium mb-1">{title}</p>
-      <h3 className="text-3xl font-mono font-bold text-white">{value}</h3>
-    </div>
-    <div className={`p-4 rounded-full ${colorClass} bg-opacity-10`}>
-      <Icon size={28} className={colorClass.replace('bg-', 'text-')} />
+  <div className="glass-card p-6 flex flex-col justify-between h-full">
+    <div className="flex items-start justify-between mb-4 gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-gray-400 text-sm font-medium mb-1 truncate">{title}</p>
+        <h3 className="text-2xl lg:text-xl xl:text-2xl font-mono font-bold text-white truncate" title={value}>{value}</h3>
+      </div>
+      <div className={`p-3 shrink-0 rounded-full ${colorClass} bg-opacity-10`}>
+        <Icon size={24} className={colorClass.replace('bg-', 'text-')} />
+      </div>
     </div>
   </div>
 );
@@ -94,8 +96,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="glass-card p-6">
           <h2 className="text-xl font-heading font-bold text-white mb-6">Ventas de la Semana</h2>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart data={reports.ventas.chartData.slice(-7)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
                 <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
@@ -109,13 +111,13 @@ const Dashboard = () => {
 
         <div className="glass-card p-6">
           <h2 className="text-xl font-heading font-bold text-white mb-6">Marcas más vendidas</h2>
-          <div className="h-72">
+          <div className="h-72 w-full">
             {reports.marcas.length === 0 || reports.marcas.every(m => m.sales === 0) ? (
               <div className="w-full h-full flex items-center justify-center text-gray-500">
                 Sin ventas registradas
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={reports.marcas.slice(0, 5)} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
                   <XAxis type="number" stroke="#6B7280" fontSize={12} allowDecimals={false} />

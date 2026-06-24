@@ -1,31 +1,36 @@
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
-import AdminLayout from './components/admin/AdminLayout';
-import CombosAdmin from './pages/admin/Combos';
-import Dashboard from './pages/admin/Dashboard';
-import Login from './pages/admin/Login';
-import OrdersAdmin from './pages/admin/Orders';
-import ProductsAdmin from './pages/admin/Products';
-import ReportsAdmin from './pages/admin/Reports';
-import GastosAdmin from './pages/admin/Gastos';
+import React, { lazy, Suspense } from 'react';
 
-import ShopLayout from './components/shop/ShopLayout';
-import Cart from './pages/shop/Cart';
-import Catalog from './pages/shop/Catalog';
-import ComboDetail from './pages/shop/ComboDetail';
-import Home from './pages/shop/Home';
-import ProductDetail from './pages/shop/ProductDetail';
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const CombosAdmin = lazy(() => import('./pages/admin/Combos'));
+const KitsAdmin = lazy(() => import('./pages/admin/Kits'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const GastosAdmin = lazy(() => import('./pages/admin/Gastos'));
+const Login = lazy(() => import('./pages/admin/Login'));
+const OrdersAdmin = lazy(() => import('./pages/admin/Orders'));
+const ProductsAdmin = lazy(() => import('./pages/admin/Products'));
+const ReportsAdmin = lazy(() => import('./pages/admin/Reports'));
 
-// Placeholders for less critical modules to satisfy routing
-const CategoriesAdmin = () => <div className="p-8"><h2 className="text-3xl font-bold text-white mb-4">Categorías</h2><p className="text-gray-400">Módulo en construcción.</p></div>;
-const BrandsAdmin = () => <div className="p-8"><h2 className="text-3xl font-bold text-white mb-4">Marcas</h2><p className="text-gray-400">Módulo en construcción.</p></div>;
-const KitsAdmin = () => <div className="p-8"><h2 className="text-3xl font-bold text-white mb-4">Kits / Combos</h2><p className="text-gray-400">Gestiona los kits aquí. (En construcción)</p></div>;
-const SettingsAdmin = () => <div className="p-8"><h2 className="text-3xl font-bold text-white mb-4">Configuración</h2><p className="text-gray-400">Gestión de WhatsApp, Nombre, Umbrales, etc.</p></div>;
+const CategoriesAdmin = lazy(() => import('./pages/admin/Categories'));
+const BrandsAdmin = lazy(() => import('./pages/admin/Brands'));
+
+const ShopLayout = lazy(() => import('./components/shop/ShopLayout'));
+const Cart = lazy(() => import('./pages/shop/Cart'));
+const Catalog = lazy(() => import('./pages/shop/Catalog'));
+const ComboDetail = lazy(() => import('./pages/shop/ComboDetail'));
+const HomePage = lazy(() => import('./pages/home/HomePage'));
+const ProductDetail = lazy(() => import('./pages/shop/ProductDetail'));
+
+const PresupuestosAdmin = lazy(() => import('./pages/admin/Presupuestos'));
+
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Toaster position="top-right" toastOptions={{
         style: {
           background: '#111111',
@@ -36,33 +41,39 @@ function App() {
       }} />
       <div className="min-h-screen flex flex-col font-sans">
         <main className="flex-1">
-          <Routes>
-            {/* Shop Routes */}
-            <Route path="/" element={<ShopLayout />}>
-              <Route index element={<Home />} />
-              <Route path="catalog" element={<Catalog />} />
-              <Route path="product/:slug" element={<ProductDetail />} />
-              <Route path="combos/:id" element={<ComboDetail />} />
-              <Route path="cart" element={<Cart />} />
-            </Route>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
+              <div className="w-8 h-8 border-2 border-[#8B0000] border-t-transparent rounded-full animate-spin" />
+            </div>
+          }>
+            <Routes>
+              {/* Shop Routes */}
+              <Route path="/" element={<ShopLayout />}>
+                <Route index element={<HomePage />} />
+                <Route path="catalog" element={<Catalog />} />
+                <Route path="producto/:id" element={<ProductDetail />} />
+                <Route path="combos/:id" element={<ComboDetail />} />
+                <Route path="cart" element={<Cart />} />
+              </Route>
 
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<Login />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="products" element={<ProductsAdmin />} />
-              <Route path="categories" element={<CategoriesAdmin />} />
-              <Route path="brands" element={<BrandsAdmin />} />
-              <Route path="kits" element={<KitsAdmin />} />
-              <Route path="combos" element={<CombosAdmin />} />
-              <Route path="orders" element={<OrdersAdmin />} />
-              <Route path="reports" element={<ReportsAdmin />} />
-              <Route path="gastos" element={<GastosAdmin />} />
-              <Route path="settings" element={<SettingsAdmin />} />
-            </Route>
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<Login />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<ProductsAdmin />} />
+                <Route path="categories" element={<CategoriesAdmin />} />
+                <Route path="brands" element={<BrandsAdmin />} />
+                <Route path="kits" element={<KitsAdmin />} />
+                <Route path="combos" element={<CombosAdmin />} />
+                <Route path="orders" element={<OrdersAdmin />} />
+                <Route path="reports" element={<ReportsAdmin />} />
+                <Route path="gastos" element={<GastosAdmin />} />
+                <Route path="presupuestos" element={<PresupuestosAdmin />} />
+              </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </Router>

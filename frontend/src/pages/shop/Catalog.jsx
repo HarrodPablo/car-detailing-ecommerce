@@ -1,32 +1,70 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { SearchX, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { formatCurrency } from '../../utils/formatters';
+import ProductCard from '../../components/shop/ProductCard';
+import ComboCard from '../../components/shop/ComboCard';
+import { SkeletonProductCard, SkeletonComboCard } from '../../components/ui/SkeletonCard';
 
 const Catalog = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   
+  const [categoriesOpen, setCategoriesOpen] = useState(true);
+  const [brandsOpen, setBrandsOpen] = useState(true);
+
   const currentCategory = searchParams.get('category');
   const currentBrand = searchParams.get('brand');
-  const isCombos = currentCategory === 'combos';
+  
+  const isCombosView = currentCategory === 'combo';
 
+  // Fetch Categories for Sidebar
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['sidebar-categories'],
+    queryFn: async () => {
+      const res = await api.get('/categories');
+      return res.data;
+    }
+  });
+  const normalCategories = categories.filter(c => c.name.toLowerCase() !== 'combos');
+
+  // Fetch Brands for Sidebar
+  const { data: brands = [], isLoading: isLoadingBrands } = useQuery({
+    queryKey: ['sidebar-brands'],
+    queryFn: async () => {
+      const res = await api.get('/brands');
+      return res.data;
+    }
+  });
+
+  // Fetch Products/Combos for Grid
   useEffect(() => {
+    // Wait until filter lookups are ready before fetching products
+    if (isLoadingCategories || isLoadingBrands) return;
+
     const fetchItems = async () => {
       setLoading(true);
       try {
         let url = '';
-        if (isCombos) {
+        if (isCombosView) {
           url = '/combos';
         } else {
-          url = '/products?';
-          if (currentCategory) url += `categoryId=${currentCategory}&`;
-          if (currentBrand) url += `brandId=${currentBrand}&`;
+          const params = new URLSearchParams();
+          if (currentCategory) {
+            const catObj = normalCategories.find(c => c.name === currentCategory);
+            if (catObj) params.append('categoryId', catObj.id);
+          }
+          if (currentBrand) {
+            const brandObj = brands.find(b => b.name === currentBrand);
+            if (brandObj) params.append('brandId', brandObj.id);
+          }
+          url = `/products?${params.toString()}`;
         }
         
         const res = await api.get(url);
-        setItems(res.data);
+        setItems(Array.isArray(res.data) ? res.data : [res.data]);
       } catch (error) {
         console.error('Error fetching catalog', error);
       } finally {
@@ -34,67 +72,243 @@ const Catalog = () => {
       }
     };
     fetchItems();
-  }, [currentCategory, currentBrand, isCombos]);
+  }, [currentCategory, currentBrand, isCombosView, categories, brands, isLoadingCategories, isLoadingBrands]);
+
+  // Handlers
+  const handleClearAllCategories = () => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.delete('category');
+      newParams.delete('brand');
+      return newParams;
+    });
+  };
+
+  const handleSetCategory = (categoryName) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('category', categoryName);
+      newParams.delete('brand');
+      return newParams;
+    });
+  };
+
+  const handleSetBrand = (brandName) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('brand', brandName);
+      if (newParams.get('category') === 'combo') {
+        newParams.delete('category');
+      }
+      return newParams;
+    });
+  };
+
+  const handleClearBrand = () => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.delete('brand');
+      return newParams;
+    });
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-heading font-bold text-white mb-8">
-        {isCombos ? 'Catálogo de Combos' : 'Catálogo de Productos'}
-      </h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Filters Sidebar (simplified) */}
-        <aside className="space-y-6">
-          <div className="glass-card p-4">
-            <h3 className="text-lg font-bold text-white mb-4 border-b border-dark-border pb-2">Categorías</h3>
-            <div className="space-y-2 text-gray-400">
-              <Link to="/catalog" className={`block hover:text-brand ${!currentCategory ? 'text-brand' : ''}`}>Todas</Link>
-              <Link to="/catalog?category=combos" className={`block hover:text-brand ${currentCategory === 'combos' ? 'text-brand' : ''}`}>Combos</Link>
-              <Link to="/catalog?category=1" className={`block hover:text-brand ${currentCategory === '1' ? 'text-brand' : ''}`}>Shampoos</Link>
-              <Link to="/catalog?category=2" className={`block hover:text-brand ${currentCategory === '2' ? 'text-brand' : ''}`}>Ceras</Link>
-            </div>
-          </div>
-        </aside>
-
-        {/* Product Grid */}
-        <main className="md:col-span-3">
-          {loading ? (
-            <div className="text-center py-20 text-gray-400">Cargando catálogo...</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {items.length > 0 ? items.map(item => {
-                const linkTo = isCombos ? `/combos/${item.id}` : `/product/${item.slug}`;
-                const imgUrl = isCombos ? item.imageUrl : item.images?.[0]?.url;
-                const brandName = isCombos ? 'Combo Exclusivo' : item.brand?.name;
-                const price = isCombos ? item.kitPrice : item.salePrice;
-
-                return (
-                  <Link key={item.id} to={linkTo} className="glass-card group block overflow-hidden">
-                    <div className="aspect-square bg-dark-900 relative">
-                      {!isCombos && item.isNew && (
-                        <span className="absolute top-2 left-2 badge">NUEVO</span>
-                      )}
-                      {imgUrl ? (
-                        <img src={imgUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-screen" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-600">Sin Imagen</div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <p className="text-xs text-brand uppercase tracking-widest font-bold mb-1">{brandName}</p>
-                      <h3 className="text-lg font-bold text-white mb-2 leading-tight group-hover:text-brand transition-colors">{item.name}</h3>
-                      <p className="text-xl font-mono text-white">{formatCurrency(price)}</p>
-                    </div>
-                  </Link>
-                );
-              }) : (
-                <div className="col-span-full text-center py-20 text-gray-400 glass-card">
-                  No se encontraron resultados con estos filtros.
+    <div className="bg-dark-base min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex flex-col md:flex-row gap-8">
+          
+          {/* Sidebar */}
+          <aside className="w-full md:w-64 shrink-0 bg-[#111] md:border-r md:border-b-0 border-b border-[#2D2D2D] md:sticky md:top-24 h-fit p-6 rounded-xl md:rounded-r-none z-10">
+            
+            {/* SECCIÓN CATEGORÍAS */}
+            <div>
+              <div 
+                onClick={() => setCategoriesOpen(!categoriesOpen)}
+                className={`flex items-center justify-between cursor-pointer group ${categoriesOpen ? 'mb-4' : ''}`}
+              >
+                <h3 className="font-heading font-black text-white text-sm tracking-widest uppercase transition-colors group-hover:text-[#8B0000]">
+                  Categorías
+                </h3>
+                {categoriesOpen ? <ChevronUp size={14} className="text-[#666] group-hover:text-[#8B0000]"/> : <ChevronDown size={14} className="text-[#666] group-hover:text-[#8B0000]"/>}
+              </div>
+              {categoriesOpen && <div className="h-px bg-[#2D2D2D] mb-4" />}
+              
+              <div className={`space-y-1 overflow-hidden transition-all duration-300 ${categoriesOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
+                <div 
+                  onClick={handleClearAllCategories}
+                  className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${!currentCategory && !currentBrand ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
+                >
+                  Todas
                 </div>
-              )}
+
+                {isLoadingCategories ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="h-6 bg-[#2D2D2D] rounded animate-pulse w-3/4 my-2 ml-3"></div>
+                  ))
+                ) : (
+                  normalCategories.map(cat => (
+                    <div 
+                      key={cat.id} 
+                      onClick={() => handleSetCategory(cat.name)}
+                      className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${currentCategory === cat.name ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
+                    >
+                      {cat.name}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          )}
-        </main>
+
+            <div className="h-px bg-[#2D2D2D] my-6" />
+
+            {/* SECCIÓN COMBOS */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-heading font-black text-white text-sm tracking-widest uppercase">
+                  Combos
+                </h3>
+                <span className="bg-[#8B0000]/20 border border-[#8B0000]/40 text-[#8B0000] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  PREMIUM
+                </span>
+              </div>
+              <div className="h-px bg-[#2D2D2D] mb-4" />
+              
+              <div className="space-y-1">
+                <div 
+                  onClick={() => handleSetCategory('combo')}
+                  className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${currentCategory === 'combo' ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
+                >
+                  Todos los combos
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px bg-[#2D2D2D] my-6" />
+
+            {/* SECCIÓN MARCAS */}
+            <div>
+              <div 
+                onClick={() => setBrandsOpen(!brandsOpen)}
+                className={`flex items-center justify-between cursor-pointer group ${brandsOpen ? 'mb-4' : ''}`}
+              >
+                <h3 className="font-heading font-black text-white text-sm tracking-widest uppercase transition-colors group-hover:text-[#8B0000]">
+                  Marcas
+                </h3>
+                {brandsOpen ? <ChevronUp size={14} className="text-[#666] group-hover:text-[#8B0000]"/> : <ChevronDown size={14} className="text-[#666] group-hover:text-[#8B0000]"/>}
+              </div>
+              {brandsOpen && <div className="h-px bg-[#2D2D2D] mb-4" />}
+              
+              <div className={`space-y-1 overflow-hidden transition-all duration-300 ${brandsOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
+                <div 
+                  onClick={handleClearBrand}
+                  className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${!currentBrand && !isCombosView && currentCategory ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
+                >
+                  Todas las marcas
+                </div>
+
+                {isLoadingBrands ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-6 bg-[#2D2D2D] rounded animate-pulse w-3/4 my-2 ml-3"></div>
+                  ))
+                ) : (
+                  brands.map(brand => (
+                    <div 
+                      key={brand.id} 
+                      onClick={() => handleSetBrand(brand.name)}
+                      className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${currentBrand === brand.name ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
+                    >
+                      {brand.name}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1">
+            {/* Grid Header */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between mb-8 gap-4 border-b border-[#2D2D2D] pb-6">
+              <div>
+                <h1 className="font-heading font-black text-white text-3xl uppercase tracking-wider mb-2">
+                  {isCombosView ? 'Catálogo de Combos' : 'Catálogo de Productos'}
+                </h1>
+                <p className="text-[#666] text-sm mb-4">
+                  {items.length} {isCombosView ? 'combos encontrados' : 'productos encontrados'}
+                </p>
+
+                {/* Active Filter Chips */}
+                {((currentCategory && !isCombosView) || currentBrand || isCombosView) && (
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    {currentCategory && !isCombosView && (
+                      <span className="flex items-center gap-1 bg-[#8B0000]/20 border border-[#8B0000]/40 text-[#8B0000] text-xs px-2 py-1 rounded-full">
+                        {currentCategory}
+                        <X size={10} className="cursor-pointer ml-1" onClick={() => handleClearAllCategories()} />
+                      </span>
+                    )}
+                    {currentBrand && (
+                      <span className="flex items-center gap-1 bg-[#8B0000]/20 border border-[#8B0000]/40 text-[#8B0000] text-xs px-2 py-1 rounded-full">
+                        {currentBrand}
+                        <X size={10} className="cursor-pointer ml-1" onClick={() => handleClearBrand()} />
+                      </span>
+                    )}
+                    {isCombosView && (
+                      <span className="flex items-center gap-1 bg-[#8B0000]/20 border border-[#8B0000]/40 text-[#8B0000] text-xs px-2 py-1 rounded-full">
+                        Combos
+                        <X size={10} className="cursor-pointer ml-1" onClick={() => handleClearAllCategories()} />
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <select className="bg-[#111] border border-[#2D2D2D] text-white text-sm rounded px-3 py-2 outline-none focus:border-brand cursor-pointer mt-1">
+                <option value="newest">Más nuevo</option>
+                <option value="price_asc">Precio ↑</option>
+                <option value="price_desc">Precio ↓</option>
+              </select>
+            </div>
+
+            {/* Product Grid */}
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, idx) => (
+                  isCombosView ? (
+                    <SkeletonComboCard key={idx} />
+                  ) : (
+                    <SkeletonProductCard key={idx} />
+                  )
+                ))}
+              </div>
+            ) : items.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {items.map(item => (
+                  isCombosView ? (
+                    <ComboCard key={item.id} combo={item} />
+                  ) : (
+                    <ProductCard key={item.id} product={item} />
+                  )
+                ))}
+              </div>
+            ) : (
+              /* Empty State */
+              <div className="flex flex-col items-center justify-center py-24 px-4 bg-[#111] rounded-xl border border-[#2D2D2D]">
+                <SearchX className="w-24 h-24 text-[#2D2D2D] mb-6" strokeWidth={1.5} />
+                <p className="text-[#666] text-lg mb-8 text-center font-sans">
+                  No encontramos resultados con ese filtro
+                </p>
+                <button 
+                  onClick={handleClearAllCategories}
+                  className="px-6 py-2.5 border border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000] hover:text-white rounded transition-colors font-sans font-medium uppercase tracking-wider text-sm"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            )}
+          </main>
+          
+        </div>
       </div>
     </div>
   );

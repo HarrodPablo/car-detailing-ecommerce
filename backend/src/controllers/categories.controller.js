@@ -41,7 +41,7 @@ const createCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const category = await prisma.category.update({
-      where: { id: req.params.id },
+      where: { id: Number(req.params.id) },
       data: req.body
     });
     res.json(category);
@@ -52,10 +52,24 @@ const updateCategory = async (req, res) => {
 
 const deleteCategory = async (req, res) => {
   try {
-    await prisma.category.delete({ where: { id: req.params.id } });
+    const id = Number(req.params.id);
+    
+    // Verificar si tiene productos asociados
+    const productsCount = await prisma.product.count({ where: { categoryId: id } });
+    if (productsCount > 0) {
+      return res.status(400).json({ message: 'No se puede eliminar: hay productos asociados a esta categoría.' });
+    }
+
+    // Verificar si tiene subcategorías (si el modelo lo usa)
+    const childrenCount = await prisma.category.count({ where: { parentId: id } });
+    if (childrenCount > 0) {
+      return res.status(400).json({ message: 'No se puede eliminar: tiene subcategorías asociadas.' });
+    }
+
+    await prisma.category.delete({ where: { id } });
     res.json({ message: 'Categoría eliminada' });
   } catch (error) {
-    res.status(500).json({ message: 'Error eliminando categoría', error });
+    res.status(500).json({ message: 'Error eliminando categoría', error: error.message });
   }
 };
 

@@ -2,6 +2,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { ShoppingCart, Menu } from 'lucide-react';
 import useCartStore from '../../store/cart.store';
 import logoImg from '../../assets/goodshop.svg';
+import Footer from './Footer';
 
 const ShopLayout = () => {
   const { items, getCartTotal } = useCartStore();
@@ -11,7 +12,7 @@ const ShopLayout = () => {
       <header className="bg-dark-950 border-b border-brand/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button className="md:hidden text-white"><Menu /></button>
+            <button className="md:hidden text-white" aria-label="Abrir menú"><Menu /></button>
             <Link to="/" className="flex items-center">
               <img src={logoImg} alt="Good Shop Logo" className="h-8 brightness-0 invert" />
             </Link>
@@ -35,19 +36,11 @@ const ShopLayout = () => {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 flex flex-col">
         <Outlet />
       </main>
 
-      <footer className="bg-dark-950 border-t border-dark-border py-12 mt-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-heading font-bold text-white mb-2">GOOD SHOP</h2>
-          <p className="text-brand text-sm tracking-widest uppercase mb-8">Productos Premium de Detailing</p>
-          <div className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Good Shop. Todos los derechos reservados.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

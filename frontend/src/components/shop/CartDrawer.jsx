@@ -46,6 +46,7 @@ const CartDrawer = () => {
           </h2>
           <button 
             onClick={closeCart}
+            aria-label="Cerrar carrito"
             className="p-2 text-gray-400 hover:text-white hover:bg-dark-800 rounded-full transition-colors"
           >
             <X size={24} />
@@ -65,11 +66,17 @@ const CartDrawer = () => {
               </button>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex space-x-4 glass-card p-4">
+            items.map((item) => {
+              const itemId = item.productId || item.kitId;
+              const isKit = !!item.kitId;
+              return (
+              <div key={itemId} className="flex space-x-4 glass-card p-4">
                 <div className="w-20 h-20 bg-dark-800 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  {/* Placeholder for image */}
-                  <ShoppingBag size={32} className="text-gray-600" />
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} width={80} height={80} loading="lazy" className="w-full h-full object-cover" />
+                  ) : (
+                    <ShoppingBag size={32} className="text-gray-600" />
+                  )}
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
@@ -80,21 +87,25 @@ const CartDrawer = () => {
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center space-x-3 bg-dark-950 rounded-lg p-1 border border-dark-800">
                       <button 
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(itemId, Math.max(1, item.quantity - 1), isKit)}
+                        aria-label="Disminuir cantidad"
                         className="p-1 hover:text-white text-gray-400 transition-colors"
                       >
                         <Minus size={16} />
                       </button>
                       <span className="w-4 text-center font-medium text-sm">{item.quantity}</span>
                       <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="p-1 hover:text-white text-gray-400 transition-colors"
+                        onClick={() => updateQuantity(itemId, item.quantity + 1, isKit)}
+                        disabled={item.stock !== undefined && item.quantity >= item.stock}
+                        aria-label="Aumentar cantidad"
+                        className={`p-1 transition-colors ${item.stock !== undefined && item.quantity >= item.stock ? 'text-dark-800 cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
                       >
                         <Plus size={16} />
                       </button>
                     </div>
                     <button 
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(itemId, isKit)}
+                      aria-label="Eliminar producto"
                       className="text-red-500/70 hover:text-red-500 transition-colors p-2"
                     >
                       <Trash2 size={18} />
@@ -102,7 +113,7 @@ const CartDrawer = () => {
                   </div>
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
 
