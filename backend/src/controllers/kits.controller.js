@@ -11,6 +11,7 @@ const getAllKits = async (req, res) => {
     });
     res.json(kits);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo kits', error });
   }
 };
@@ -28,6 +29,7 @@ const getKitBySlug = async (req, res) => {
     if (!kit) return res.status(404).json({ message: 'Kit no encontrado' });
     res.json(kit);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo kit', error });
   }
 };
@@ -52,6 +54,7 @@ const createKit = async (req, res) => {
     
     res.status(201).json(kit);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error creando kit', error });
   }
 };
@@ -81,6 +84,7 @@ const updateKit = async (req, res) => {
 
     res.json(kit);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error actualizando kit', error });
   }
 };
@@ -91,6 +95,7 @@ const deleteKit = async (req, res) => {
     await prisma.kit.delete({ where: { id: req.params.id } });
     res.json({ message: 'Kit eliminado' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error eliminando kit', error });
   }
 };

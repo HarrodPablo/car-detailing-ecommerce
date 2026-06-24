@@ -9,6 +9,7 @@ const getSettings = async (req, res) => {
     }, {});
     res.json(formattedSettings);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo configuración', error });
   }
 };
@@ -29,6 +30,7 @@ const updateSettings = async (req, res) => {
     await prisma.$transaction(transactions);
     res.json({ message: 'Configuración actualizada con éxito' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error actualizando configuración', error });
   }
 };

@@ -35,6 +35,7 @@ const getGastos = async (req, res) => {
     
     res.json(gastos);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo gastos', error });
   }
 };
@@ -56,6 +57,7 @@ const createGasto = async (req, res) => {
     
     res.status(201).json(gasto);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error creando gasto', error });
   }
 };
@@ -66,6 +68,7 @@ const deleteGasto = async (req, res) => {
     await prisma.gasto.delete({ where: { id: Number(id) } });
     res.json({ message: 'Gasto eliminado correctamente' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error eliminando gasto', error });
   }
 };

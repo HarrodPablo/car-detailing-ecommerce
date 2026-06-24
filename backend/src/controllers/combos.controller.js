@@ -10,6 +10,7 @@ const getCombos = async (req, res) => {
     });
     res.json(combos);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ error: 'Error obteniendo combos' });
   }
 };
@@ -52,6 +53,7 @@ const deleteCombo = async (req, res) => {
     await prisma.kit.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Combo eliminado' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ error: 'Error eliminando combo' });
   }
 };
@@ -66,6 +68,7 @@ const getComboById = async (req, res) => {
     if (!kit) return res.status(404).json({ error: 'Combo no encontrado' });
     res.json(kit);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ error: 'Error obteniendo combo' });
   }
 };

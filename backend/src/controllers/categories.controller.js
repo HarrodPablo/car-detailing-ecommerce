@@ -9,6 +9,7 @@ const getAllCategories = async (req, res) => {
     // Build tree if necessary or just return flat list
     res.json(categories);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo categorías', error });
   }
 };
@@ -22,6 +23,7 @@ const getCategoryBySlug = async (req, res) => {
     if (!category) return res.status(404).json({ message: 'Categoría no encontrada' });
     res.json(category);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo categoría', error });
   }
 };
@@ -34,6 +36,7 @@ const createCategory = async (req, res) => {
     });
     res.status(201).json(category);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error creando categoría', error });
   }
 };
@@ -46,6 +49,7 @@ const updateCategory = async (req, res) => {
     });
     res.json(category);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error actualizando categoría', error });
   }
 };
@@ -69,6 +73,7 @@ const deleteCategory = async (req, res) => {
     await prisma.category.delete({ where: { id } });
     res.json({ message: 'Categoría eliminada' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error eliminando categoría', error: error.message });
   }
 };

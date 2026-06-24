@@ -66,6 +66,7 @@ const getResumenReport = async (req, res) => {
       comparativo: Number(comparativo.toFixed(2))
     });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error en resumen', error });
   }
 };
@@ -98,6 +99,7 @@ const getProductosTopReport = async (req, res) => {
 
     res.json(top);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error en productos top', error });
   }
 };
@@ -139,6 +141,7 @@ const getCategoriasReport = async (req, res) => {
 
     res.json(result);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error en categorias', error });
   }
 };
@@ -205,6 +208,7 @@ const getVentasReport = async (req, res) => {
       totalVentas
     });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo chart de ventas', error });
   }
 };
@@ -241,6 +245,7 @@ const getMarcasReport = async (req, res) => {
 
     res.json(report);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo reporte de marcas', error });
   }
 };

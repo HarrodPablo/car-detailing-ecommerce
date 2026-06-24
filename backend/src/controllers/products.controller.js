@@ -25,6 +25,7 @@ const getProducts = async (req, res, next) => {
     });
     res.json(products);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };
@@ -45,6 +46,7 @@ const getProductBySlug = async (req, res, next) => {
     }
     res.json(product);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };
@@ -138,6 +140,7 @@ const updateProduct = async (req, res, next) => {
     });
     res.json(updatedProduct);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };
@@ -180,6 +183,7 @@ const updateProductImage = async (req, res, next) => {
     });
     res.json(updatedProduct);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };

@@ -6,6 +6,7 @@ const getStockAlerts = async (req, res, next) => {
     const products = await prisma.$queryRaw`SELECT * FROM "Product" WHERE stock <= "minStock"`;
     res.json(products);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };
@@ -21,6 +22,7 @@ const getLotExpiryAlerts = async (req, res, next) => {
     `;
     res.json(lots);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };

@@ -28,6 +28,7 @@ const login = async (req, res) => {
 
     res.json({ token, user: { email: cleanEmail, role: 'admin' } });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 };

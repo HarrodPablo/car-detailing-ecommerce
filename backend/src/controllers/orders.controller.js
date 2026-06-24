@@ -35,6 +35,7 @@ const getOrders = async (req, res, next) => {
     });
     res.json(orders);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     next(error);
   }
 };
@@ -93,6 +94,7 @@ const createOrder = async (req, res, next) => {
 
     res.status(201).json(newOrder);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     if (error.message.includes('Stock insuficiente')) {
       return res.status(400).json({ error: error.message });
     }
@@ -170,6 +172,7 @@ const updateOrderStatus = async (req, res, next) => {
 
     res.json(updatedOrder);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     if (error.message.includes('Stock insuficiente') || error.message === 'Pedido no encontrado') {
       return res.status(400).json({ error: error.message });
     }
@@ -197,6 +200,7 @@ const deleteOrder = async (req, res, next) => {
 
     res.json({ message: 'Pedido eliminado' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     if (error.message === 'Pedido no encontrado') {
       return res.status(404).json({ error: error.message });
     }

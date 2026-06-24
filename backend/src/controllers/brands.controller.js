@@ -7,6 +7,7 @@ const getAllBrands = async (req, res) => {
     });
     res.json(brands);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo marcas', error });
   }
 };
@@ -20,6 +21,7 @@ const getBrandBySlug = async (req, res) => {
     if (!brand) return res.status(404).json({ message: 'Marca no encontrada' });
     res.json(brand);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error obteniendo marca', error });
   }
 };
@@ -32,6 +34,7 @@ const createBrand = async (req, res) => {
     });
     res.status(201).json(brand);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error creando marca', error });
   }
 };
@@ -44,6 +47,7 @@ const updateBrand = async (req, res) => {
     });
     res.json(brand);
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error actualizando marca', error });
   }
 };
@@ -61,6 +65,7 @@ const deleteBrand = async (req, res) => {
     await prisma.brand.delete({ where: { id } });
     res.json({ message: 'Marca eliminada' });
   } catch (error) {
+    console.error('Error en Controlador:', error);
     res.status(500).json({ message: 'Error eliminando marca', error: error.message });
   }
 };
