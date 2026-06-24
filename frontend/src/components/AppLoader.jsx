@@ -12,7 +12,7 @@ export function AppLoader({ children }) {
     // Warm-up: despertar el backend apenas entra el usuario
     const controller = new AbortController()
     
-    fetch(`${API_URL}/api/health`, { signal: controller.signal })
+    fetch(`${API_URL}/health`, { signal: controller.signal })
       .then(() => setReady(true))
       .catch(() => setReady(true)) // si falla igual mostrar la app
 
