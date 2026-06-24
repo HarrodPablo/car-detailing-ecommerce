@@ -75,10 +75,15 @@ const GastosAdmin = () => {
       });
       toast.success('Factura procesada con éxito');
     } catch (error) {
-      if (error.response?.status === 503) {
+      if (error.response?.status === 503 && !error.response?.data?.details) {
         toast.error('La IA no está configurada (Falta API Key)');
       } else {
-        toast.error('No se pudo procesar la factura');
+        const detail = error.response?.data?.details || '';
+        if (detail.includes('503') || detail.toLowerCase().includes('high demand') || detail.includes('temporarily overloaded')) {
+          toast.error('TRÁFICO GOOGLE, INTENTE DE NUEVO !', { duration: 4000 });
+        } else {
+          toast.error(detail ? `Error IA: ${detail}` : 'No se pudo procesar la factura');
+        }
       }
     } finally {
       setIsScanning(false);
@@ -169,7 +174,7 @@ const GastosAdmin = () => {
             <Receipt size={24} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Escanear Factura con IA</h2>
+            <h2 className="text-lg font-bold text-white">Escanear Factura </h2>
             <p className="text-sm text-gray-400">Subí un ticket o factura y Gemini extraerá los datos automáticamente.</p>
           </div>
         </div>

@@ -81,14 +81,14 @@ const escanearFactura = async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Prepare image for Gemini
     const imageParts = [
       {
         inlineData: {
           data: req.file.buffer.toString('base64'),
-          mimeType: req.file.mimetype
+          mimeType: req.file.mimetype === 'application/x-pdf' || req.file.originalname.toLowerCase().endsWith('.pdf') ? 'application/pdf' : req.file.mimetype
         }
       }
     ];
@@ -121,7 +121,10 @@ Devolvé SOLO el JSON, sin texto adicional ni markdown.`;
     res.json(parsedData);
   } catch (error) {
     console.error('Error procesando factura con Gemini:', error);
-    res.status(422).json({ error: 'No se pudo procesar la factura' });
+    res.status(422).json({ 
+      error: 'No se pudo procesar la factura',
+      details: error.message || String(error)
+    });
   }
 };
 

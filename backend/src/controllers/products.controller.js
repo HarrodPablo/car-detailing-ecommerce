@@ -205,6 +205,10 @@ const deleteProduct = async (req, res, next) => {
     });
     res.json({ message: 'Producto eliminado' });
   } catch (error) {
+    console.error("DELETE PRODUCT ERROR:", error);
+    if (error.code === 'P2003' || (error.message && error.message.includes('foreign key constraint'))) {
+      return res.status(400).json({ error: 'No se puede eliminar el producto porque está incluido en un Combo o en pedidos históricos. Recomendamos editar el producto y ponerlo como "Inactivo".' });
+    }
     next(error);
   }
 };

@@ -28,7 +28,7 @@ const getResumenReport = async (req, res) => {
     const currentOrders = await prisma.order.findMany({
       where: {
         createdAt: { gte: startDate, lte: endDate },
-        status: { not: 'cancelado' }
+        status: 'entregado'
       }
     });
 
@@ -46,7 +46,7 @@ const getResumenReport = async (req, res) => {
     const prevOrders = await prisma.order.findMany({
       where: {
         createdAt: { gte: prevStartDate, lte: prevEndDate },
-        status: { not: 'cancelado' }
+        status: 'entregado'
       }
     });
 
@@ -80,7 +80,7 @@ const getProductosTopReport = async (req, res) => {
           where: {
             order: {
               createdAt: { gte: startDate, lte: endDate },
-              status: { not: 'cancelado' }
+              status: 'entregado'
             }
           }
         }
@@ -114,7 +114,7 @@ const getCategoriasReport = async (req, res) => {
               where: {
                 order: {
                   createdAt: { gte: startDate, lte: endDate },
-                  status: { not: 'cancelado' }
+                  status: 'entregado'
                 }
               }
             }
@@ -152,7 +152,7 @@ const getVentasReport = async (req, res) => {
     const orders = await prisma.order.findMany({
       where: { 
         createdAt: { gte: startDate, lte: endDate },
-        status: { not: 'cancelado' }
+        status: 'entregado'
       }
     });
 
@@ -221,7 +221,7 @@ const getMarcasReport = async (req, res) => {
               where: {
                 order: {
                   createdAt: { gte: startDate, lte: endDate },
-                  status: { not: 'cancelado' }
+                  status: 'entregado'
                 }
               },
               include: { order: true }
@@ -276,7 +276,10 @@ Devolvé un análisis en español con: 1 conclusión principal en negrita, 2-3 o
     res.json({ analisis: text });
   } catch (error) {
     console.error('Error en analizarIA:', error);
-    res.status(500).json({ error: 'Error generando análisis' });
+    res.status(500).json({ 
+      error: 'Error generando análisis',
+      details: error.message || String(error)
+    });
   }
 };
 

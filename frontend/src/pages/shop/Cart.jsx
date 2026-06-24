@@ -5,12 +5,14 @@ import useCartStore from '../../store/cart.store';
 import { formatCurrency } from '../../utils/formatters';
 import { generateWhatsAppLink } from '../../utils/whatsapp';
 import api from '../../lib/axios';
+import Remito from '../../components/shop/Remito';
 
 const Cart = () => {
   const { items, removeItem, updateQuantity, getCartTotal, clearCart } = useCartStore();
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [notes, setNotes] = useState('');
+  const [showRemito, setShowRemito] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -41,23 +43,26 @@ const Cart = () => {
           subtotal: i.price * i.quantity
         }))
       });
-      
-      // Generate WhatsApp message
-      let msg = `🚗 *Nuevo Pedido - Good Shop*\n────────────────\n📦 *Productos:*\n`;
-      items.forEach(i => {
-        msg += `• ${i.quantity}x ${i.name} - ${formatCurrency(i.price)}\n`;
-      });
-      msg += `────────────────\n💰 *Total: ${formatCurrency(getCartTotal())}*\n────────────────\n`;
-      msg += `👤 *Cliente:* ${customerName || 'No especificado'}\n📍 *Notas:* ${notes || 'Ninguna'}`;
-
-      const link = generateWhatsAppLink(whatsappNumber, msg);
-      
-      clearCart();
-      window.open(link, '_blank');
+      setShowRemito(true);
     } catch (error) {
       console.error('Error procesando pedido', error);
       alert('Hubo un error procesando su pedido. Intente nuevamente.');
     }
+  };
+
+  const handleConfirmWhatsApp = () => {
+    let msg = `🚗 *Nuevo Pedido - Good Shop*\n────────────────\n📦 *Productos:*\n`;
+    items.forEach(i => {
+      msg += `• ${i.quantity}x ${i.name} - ${formatCurrency(i.price)}\n`;
+    });
+    msg += `────────────────\n💰 *Total: ${formatCurrency(getCartTotal())}*\n────────────────\n`;
+    msg += `👤 *Cliente:* ${customerName || 'No especificado'}\n📍 *Notas:* ${notes || 'Ninguna'}`;
+
+    const link = generateWhatsAppLink(whatsappNumber, msg);
+    
+    clearCart();
+    setShowRemito(false);
+    window.open(link, '_blank');
   };
 
   if (items.length === 0) {
@@ -83,7 +88,7 @@ const Cart = () => {
             <div key={item.productId || item.kitId} className="glass-card p-4 flex gap-4 items-center">
               <div className="w-24 h-24 bg-dark-900 rounded overflow-hidden shrink-0 border border-dark-border">
                 {item.image ? (
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  <img src={item.image} alt={item.name} width={96} height={96} loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-600">No img</div>
                 )}
@@ -94,11 +99,18 @@ const Cart = () => {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center border border-dark-border rounded bg-dark-900">
-                  <button onClick={() => updateQuantity(item.productId || item.kitId, Math.max(1, item.quantity - 1), !!item.kitId)} className="px-3 py-1 text-gray-400 hover:text-white">-</button>
+                  <button onClick={() => updateQuantity(item.productId || item.kitId, Math.max(1, item.quantity - 1), !!item.kitId)} aria-label="Disminuir cantidad" className="px-3 py-1 text-gray-400 hover:text-white">-</button>
                   <span className="w-8 text-center text-white">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.productId || item.kitId, item.quantity + 1, !!item.kitId)} className="px-3 py-1 text-gray-400 hover:text-white">+</button>
+                  <button 
+                    onClick={() => updateQuantity(item.productId || item.kitId, item.quantity + 1, !!item.kitId)} 
+                    disabled={item.stock !== undefined && item.quantity >= item.stock}
+                    aria-label="Aumentar cantidad"
+                    className={`px-3 py-1 ${item.stock !== undefined && item.quantity >= item.stock ? 'text-dark-border cursor-not-allowed' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    +
+                  </button>
                 </div>
-                <button onClick={() => removeItem(item.productId || item.kitId, !!item.kitId)} className="text-red-500 hover:text-red-400 p-2">
+                <button onClick={() => removeItem(item.productId || item.kitId, !!item.kitId)} aria-label="Eliminar producto" className="text-red-500 hover:text-red-400 p-2">
                   <Trash2 size={20} />
                 </button>
               </div>
@@ -144,10 +156,21 @@ const Cart = () => {
           </div>
 
           <button onClick={handleCheckout} className="w-full btn-primary py-4 text-lg">
-            Pedir por WhatsApp
+            Confirmar Pedido
           </button>
         </div>
       </div>
+
+      {showRemito && (
+        <Remito 
+          items={items}
+          customerName={customerName}
+          notes={notes}
+          total={getCartTotal()}
+          onClose={() => setShowRemito(false)}
+          onConfirm={handleConfirmWhatsApp}
+        />
+      )}
     </div>
   );
 };

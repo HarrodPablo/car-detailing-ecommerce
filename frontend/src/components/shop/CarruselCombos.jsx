@@ -35,6 +35,9 @@ const CarruselCombos = ({ combos }) => {
           key={combos[actual].id}
           src={combos[actual].imageUrl || combos[actual].imagen_url}
           alt={combos[actual].name || combos[actual].nombre}
+          width={800}
+          height={450}
+          fetchpriority="high"
           className="w-full h-full object-cover transition-transform 
                      duration-700 group-hover:scale-105"
         />

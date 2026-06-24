@@ -8,7 +8,8 @@ import {
   Settings,
   ShoppingCart,
   Tags,
-  Receipt
+  Receipt,
+  FileText
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -63,7 +64,7 @@ const AdminLayout = () => {
           <SidebarItem icon={Receipt} label="Gastos" to="/admin/gastos" />
           <SidebarItem icon={Tags} label="Marcas" to="/admin/brands" />
           <SidebarItem icon={Tags} label="Categorías" to="/admin/categories" />
-          <SidebarItem icon={Settings} label="Configuración" to="/admin/settings" />
+          <SidebarItem icon={FileText} label="Presupuestos" to="/admin/presupuestos" />
         </nav>
 
         <div className="p-4 border-t border-dark-border">

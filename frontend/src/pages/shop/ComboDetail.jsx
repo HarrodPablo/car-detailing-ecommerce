@@ -58,7 +58,7 @@ const ComboDetail = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white flex items-center gap-2 mb-8 transition-colors">
+      <button onClick={() => navigate(-1)} aria-label="Volver" className="text-gray-400 hover:text-white flex items-center gap-2 mb-8 transition-colors">
         <ArrowLeft size={20} /> Volver
       </button>
 
@@ -67,7 +67,7 @@ const ComboDetail = () => {
         <div className="space-y-4">
           <div className="aspect-video bg-dark-900 border border-dark-border rounded-xl overflow-hidden flex items-center justify-center relative shadow-2xl">
             {combo.imageUrl ? (
-              <img src={combo.imageUrl} alt={combo.name} className="w-full h-full object-cover" />
+              <img src={combo.imageUrl} alt={combo.name} width={600} height={400} fetchpriority="high" className="w-full h-full object-cover" />
             ) : (
               <div className="text-gray-600 flex flex-col items-center">
                 <Package size={48} className="mb-2 opacity-50" />
@@ -104,7 +104,7 @@ const ComboDetail = () => {
                   >
                     <div className="w-16 h-16 bg-black rounded flex items-center justify-center shrink-0">
                       {imgUrl ? (
-                        <img src={imgUrl} alt={p.name} className="w-full h-full object-contain mix-blend-screen" />
+                        <img src={imgUrl} alt={p.name} width={64} height={64} loading="lazy" className="w-full h-full object-contain mix-blend-screen" />
                       ) : (
                         <span className="text-xs text-gray-600">N/A</span>
                       )}
@@ -131,7 +131,7 @@ const ComboDetail = () => {
             <div className="flex items-center gap-4 mb-6">
               <span className="text-gray-400 text-sm uppercase tracking-wider font-bold">Cantidad de Combos</span>
               <div className="flex items-center border border-dark-border rounded-sm bg-dark-900 overflow-hidden">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">-</button>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} aria-label="Disminuir cantidad" className="px-4 py-2 text-gray-400 hover:text-white transition-colors">-</button>
                 <input 
                   type="number" 
                   min="1" 
@@ -150,7 +150,7 @@ const ComboDetail = () => {
                   className="w-14 text-center text-white font-mono bg-transparent outline-none appearance-none"
                   style={{ MozAppearance: 'textfield' }}
                 />
-                <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">+</button>
+                <button onClick={() => setQuantity(quantity + 1)} aria-label="Aumentar cantidad" className="px-4 py-2 text-gray-400 hover:text-white transition-colors">+</button>
               </div>
             </div>
 

@@ -34,7 +34,8 @@ const ProductsAdmin = () => {
     queryFn: async () => {
       const res = await api.get('/products');
       return res.data;
-    }
+    },
+    staleTime: 0,
   });
 
   const { data: brands = [] } = useQuery({
@@ -42,7 +43,8 @@ const ProductsAdmin = () => {
     queryFn: async () => {
       const res = await api.get('/brands');
       return res.data;
-    }
+    },
+    staleTime: 0,
   });
 
   const { data: categories = [] } = useQuery({
@@ -50,7 +52,8 @@ const ProductsAdmin = () => {
     queryFn: async () => {
       const res = await api.get('/categories');
       return res.data;
-    }
+    },
+    staleTime: 0,
   });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
@@ -106,7 +109,11 @@ const ProductsAdmin = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       toast.success('Producto eliminado exitosamente');
     },
-    onError: () => toast.error('Error al eliminar el producto')
+    onError: (error) => {
+      console.error("Delete Error:", error);
+      const msg = error.response?.data?.error || error.response?.data?.message || 'Error al eliminar el producto';
+      toast.error(msg);
+    }
   });
 
   const handleOpenCreate = () => {

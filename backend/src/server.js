@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
 const initStockAlertJob = require('./jobs/stockAlert.job');
 const initLotExpiryJob = require('./jobs/lotExpiry.job');
+const cron = require('node-cron');
+const prisma = require('./prisma/client');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,9 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Basic route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Good Shop API is running' });
-});
+app.use('/api/health', require('./routes/health.routes'));
 
 // Mount Routes
 app.use('/api/auth', require('./routes/auth.routes'));
@@ -57,6 +57,17 @@ app.use(errorHandler);
 if (process.env.NODE_ENV !== 'test') {
   initStockAlertJob();
   initLotExpiryJob();
+  
+  // Keep-alive: ping a Neon cada 4 minutos para evitar que el pool duerma
+  cron.schedule('*/4 * * * *', async () => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      console.log('[keep-alive] Neon ping OK');
+    } catch (e) {
+      console.error('[keep-alive] Neon ping failed:', e.message);
+    }
+  });
+
   console.log('Cron jobs inicializados');
 }
 

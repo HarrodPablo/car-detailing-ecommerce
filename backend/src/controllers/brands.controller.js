@@ -39,7 +39,7 @@ const createBrand = async (req, res) => {
 const updateBrand = async (req, res) => {
   try {
     const brand = await prisma.brand.update({
-      where: { id: req.params.id },
+      where: { id: Number(req.params.id) },
       data: req.body
     });
     res.json(brand);
@@ -50,10 +50,18 @@ const updateBrand = async (req, res) => {
 
 const deleteBrand = async (req, res) => {
   try {
-    await prisma.brand.delete({ where: { id: req.params.id } });
+    const id = Number(req.params.id);
+    
+    // Verificar si tiene productos asociados
+    const productsCount = await prisma.product.count({ where: { brandId: id } });
+    if (productsCount > 0) {
+      return res.status(400).json({ message: 'No se puede eliminar: hay productos asociados a esta marca.' });
+    }
+
+    await prisma.brand.delete({ where: { id } });
     res.json({ message: 'Marca eliminada' });
   } catch (error) {
-    res.status(500).json({ message: 'Error eliminando marca', error });
+    res.status(500).json({ message: 'Error eliminando marca', error: error.message });
   }
 };
 
