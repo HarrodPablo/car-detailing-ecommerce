@@ -7,6 +7,8 @@ import ProductCard from '../../components/shop/ProductCard';
 import ComboCard from '../../components/shop/ComboCard';
 import { SkeletonProductCard, SkeletonComboCard } from '../../components/ui/SkeletonCard';
 
+const EMPTY_ARRAY = [];
+
 const Catalog = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ const Catalog = () => {
   const isCombosView = currentCategory === 'combo';
 
   // Fetch Categories for Sidebar
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+  const { data: categories = EMPTY_ARRAY, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['sidebar-categories'],
     queryFn: async () => {
       const res = await api.get('/categories');
@@ -31,7 +33,7 @@ const Catalog = () => {
   const normalCategories = categories.filter(c => c.name.toLowerCase() !== 'combos');
 
   // Fetch Brands for Sidebar
-  const { data: brands = [], isLoading: isLoadingBrands } = useQuery({
+  const { data: brands = EMPTY_ARRAY, isLoading: isLoadingBrands } = useQuery({
     queryKey: ['sidebar-brands'],
     queryFn: async () => {
       const res = await api.get('/brands');
