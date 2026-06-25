@@ -20,7 +20,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 
-const { errorHandler, notFound } = require('./middlewares/error.middleware');
+const { errorHandler } = require('./middlewares/error.middleware');
 const initStockAlertJob = require('./jobs/stockAlert.job');
 const initLotExpiryJob = require('./jobs/lotExpiry.job');
 const cron = require('node-cron');
@@ -70,7 +70,12 @@ app.use('/api/lots', require('./routes/lots.routes')); // Added lots since it ex
 app.use('/api/remove-bg', require('./routes/removebg.routes'));
 
 // Error Middlewares
-app.use(notFound);
+app.use((req, res) => {
+  res.status(404).json({ 
+    message: `Ruta no encontrada - ${req.path}`,
+    stack: null 
+  });
+});
 app.use(errorHandler);
 
 // Start Cron Jobs
