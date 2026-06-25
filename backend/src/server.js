@@ -1,8 +1,9 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 require('dotenv').config();
 
 const requiredEnvVars = [
   'DATABASE_URL',
-  'JWT_SECRET', 
+  'JWT_SECRET',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
   'GOOGLE_CALLBACK_URL',
@@ -16,10 +17,10 @@ requiredEnvVars.forEach(varName => {
     process.exit(1);
   }
 });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-
 const { errorHandler } = require('./middlewares/error.middleware');
 const initStockAlertJob = require('./jobs/stockAlert.job');
 const initLotExpiryJob = require('./jobs/lotExpiry.job');
@@ -28,33 +29,37 @@ const prisma = require('./prisma/client');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
 const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
   process.env.FRONTEND_URL,
-  /^https:\/\/goodshop-premium.*\.vercel\.app$/, // previews
+  /^https:\/\/goodshop-premium.*\.vercel\.app$/,
 ].filter(Boolean);
 
-// Middlewares
-app.use(helmet());
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // curl/postman
+    if (!origin) return callback(null, true);
     const ok = allowedOrigins.some(o =>
       o instanceof RegExp ? o.test(origin) : o === origin
     );
     callback(ok ? null : new Error('Not allowed by CORS'), ok);
   },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(helmet());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const passport = require('./config/passport');
 app.use(passport.initialize());
 
-// Basic route
 app.use('/api/health', require('./routes/health.routes'));
-
-// Mount Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/products', require('./routes/products.routes'));
 app.use('/api/brands', require('./routes/brands.routes'));
@@ -66,36 +71,28 @@ app.use('/api/reports', require('./routes/reports.routes'));
 app.use('/api/gastos', require('./routes/gastos.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/alerts', require('./routes/alerts.routes'));
-app.use('/api/lots', require('./routes/lots.routes')); // Added lots since it exists
+app.use('/api/lots', require('./routes/lots.routes'));
 app.use('/api/remove-bg', require('./routes/removebg.routes'));
 
-// Error Middlewares
 app.use((req, res) => {
-  res.status(404).json({ 
-    message: `Ruta no encontrada - ${req.path}`,
-    stack: null 
-  });
+  res.status(404).json({ message: `Ruta no encontrada - ${req.path}` });
 });
 app.use(errorHandler);
 
-// Start Cron Jobs
 if (process.env.NODE_ENV !== 'test') {
   initStockAlertJob();
   initLotExpiryJob();
-  
-  // Keep-alive: ping a Neon cada 4 minutos para evitar que el pool duerma
+
   cron.schedule('*/4 * * * *', async () => {
     try {
       await prisma.$queryRaw`SELECT 1`;
-
+      console.log('[keep-alive] Neon ping OK');
     } catch (e) {
       console.error('[keep-alive] Neon ping failed:', e.message);
     }
   });
-
-
 }
 
 app.listen(PORT, () => {
-
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
