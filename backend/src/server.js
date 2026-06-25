@@ -72,7 +72,12 @@ app.use('/api/gastos', require('./routes/gastos.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/alerts', require('./routes/alerts.routes'));
 app.use('/api/lots', require('./routes/lots.routes'));
-app.use('/api/remove-bg', require('./routes/removebg.routes'));
+// app.use('/api/remove-bg', require('./routes/removebg.routes'));
+app.use('/api/remove-bg', (req, res) => {
+  res.status(503).json({ 
+    message: 'Función de remoción de fondo temporalmente deshabilitada en este entorno.' 
+  });
+});
 
 app.use((req, res) => {
   res.status(404).json({ message: `Ruta no encontrada - ${req.path}` });
