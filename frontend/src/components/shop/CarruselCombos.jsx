@@ -41,7 +41,7 @@ const CarruselCombos = ({ combos }) => {
           className="w-full h-full object-cover transition-transform 
                      duration-700 group-hover:scale-105"
         />
-        {console.log('combo actual:', combos[actual])}
+
       </Link>
 
       {/* Controles — solo si hay más de 1 */}

@@ -3,7 +3,7 @@ const CategoriesSection = () => {
   const categories = [
     {
       id: 1,
-      title: "Lavado & Espumas",
+      title: "Lavado",
       productsCount: 42,
       image: "https://i.ibb.co/d4mx54Nm/Gemini-Generated-Image-kwhqfgkwhqfgkwhq.png",
       isLarge: true
@@ -24,21 +24,21 @@ const CategoriesSection = () => {
     },
     {
       id: 4,
-      title: "Cerámica & Recubrimientos",
+      title: "Exterior",
       productsCount: 24,
       image: "https://i.ibb.co/mFdDVWCX/Gemini-Generated-Image-arnn9zarnn9zarnn.png",
       isLarge: false
     },
     {
       id: 5,
-      title: "Detailing Interior",
+      title: "Interior",
       productsCount: 89,
       image: "https://i.ibb.co/HDVftTnz/Gemini-Generated-Image-b9f79lb9f79lb9f7.png",
       isLarge: false
     },
     {
       id: 6,
-      title: "Accesorios Pro",
+      title: "Accesorios Detailing",
       productsCount: 12,
       image: "https://i.ibb.co/NgXSywtD/Gemini-Generated-Image-p242kjp242kjp242.png",
       isLarge: false

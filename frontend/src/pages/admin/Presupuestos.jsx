@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, FileDown, MessageCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
 import html2pdf from 'html2pdf.js';
+import { FileDown, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import RemitoTemplate from '../../components/RemitoTemplate';
 import { formatCurrency } from '../../utils/formatters';
 import { generateWhatsAppLink } from '../../utils/whatsapp';
-import RemitoTemplate from '../../components/RemitoTemplate';
 
 const PresupuestosAdmin = () => {
   const [numero, setNumero] = useState('00001');
@@ -14,7 +14,7 @@ const PresupuestosAdmin = () => {
   const [domicilio, setDomicilio] = useState('');
   const [condicionVenta, setCondicionVenta] = useState('Contado');
   const [items, setItems] = useState([{ descripcion: '', cantidad: 1, importe: 0 }]);
-  
+
   const templateRef = useRef();
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const PresupuestosAdmin = () => {
     }
 
     const element = templateRef.current;
-    
+
     // Configuración para html2pdf
     const opt = {
       margin: 0,
@@ -92,7 +92,7 @@ const PresupuestosAdmin = () => {
 
     const message = `Hola ${cliente}, te enviamos tu presupuesto #${numero} de Good Shop. ¡Cualquier consulta estamos disponibles!`;
     const link = generateWhatsAppLink(telefono, message);
-    
+
     window.open(link, '_blank');
     toast.success('Abriendo WhatsApp...');
   };
@@ -110,8 +110,8 @@ const PresupuestosAdmin = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Presupuesto Nº</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={numero}
               readOnly
               className="w-full bg-dark-base border border-dark-border rounded px-4 py-2 text-white font-mono opacity-70 cursor-not-allowed"
@@ -119,8 +119,8 @@ const PresupuestosAdmin = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Fecha</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
               className="w-full bg-dark-900 border border-dark-border rounded px-4 py-2 text-white focus:outline-none focus:border-brand"
@@ -128,8 +128,8 @@ const PresupuestosAdmin = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Cliente</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={cliente}
               onChange={(e) => setCliente(e.target.value)}
               placeholder="Nombre del cliente"
@@ -138,8 +138,8 @@ const PresupuestosAdmin = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Teléfono</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
               placeholder="Ej: 3811234567"
@@ -148,8 +148,8 @@ const PresupuestosAdmin = () => {
           </div>
           <div className="lg:col-span-4">
             <label className="block text-sm font-medium text-gray-400 mb-2">Domicilio (Opcional)</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={domicilio}
               onChange={(e) => setDomicilio(e.target.value)}
               placeholder="Dirección del cliente"
@@ -165,11 +165,10 @@ const PresupuestosAdmin = () => {
               <button
                 key={cond}
                 onClick={() => setCondicionVenta(cond)}
-                className={`px-4 py-2 rounded-lg border transition-colors ${
-                  condicionVenta === cond 
-                    ? 'border-brand bg-brand/20 text-brand font-bold' 
+                className={`px-4 py-2 rounded-lg border transition-colors ${condicionVenta === cond
+                    ? 'border-brand bg-brand/20 text-brand font-bold'
                     : 'border-dark-border bg-dark-900 text-gray-400 hover:text-white hover:border-gray-600'
-                }`}
+                  }`}
               >
                 {cond}
               </button>
@@ -185,7 +184,7 @@ const PresupuestosAdmin = () => {
             <Plus size={16} /> Agregar Fila
           </button>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -201,8 +200,8 @@ const PresupuestosAdmin = () => {
               {items.map((item, index) => (
                 <tr key={index} className="hover:bg-dark-900/30 transition-colors">
                   <td className="p-2">
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       min="1"
                       value={item.cantidad}
                       onChange={(e) => handleItemChange(index, 'cantidad', e.target.value)}
@@ -210,8 +209,8 @@ const PresupuestosAdmin = () => {
                     />
                   </td>
                   <td className="p-2">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={item.descripcion}
                       onChange={(e) => handleItemChange(index, 'descripcion', e.target.value)}
                       placeholder="Descripción del producto o servicio"
@@ -219,8 +218,8 @@ const PresupuestosAdmin = () => {
                     />
                   </td>
                   <td className="p-2">
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       min="0"
                       step="100"
                       value={item.importe}
@@ -232,7 +231,7 @@ const PresupuestosAdmin = () => {
                     {formatCurrency(item.cantidad * item.importe)}
                   </td>
                   <td className="p-2 text-center">
-                    <button 
+                    <button
                       onClick={() => handleRemoveItem(index)}
                       className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                       title="Eliminar fila"
@@ -255,14 +254,14 @@ const PresupuestosAdmin = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-end gap-4">
-        <button 
+        {/*<button 
           onClick={handleWhatsApp}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 hover:bg-[#25D366]/20 font-bold rounded-lg transition-colors"
         >
           <MessageCircle size={20} />
           Enviar por WhatsApp
-        </button>
-        <button 
+        </button>*/}
+        <button
           onClick={handleDownloadPDF}
           className="btn-primary flex items-center justify-center gap-2 py-3"
         >
@@ -273,7 +272,7 @@ const PresupuestosAdmin = () => {
 
       {/* Hidden Template for PDF Generation */}
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-        <RemitoTemplate 
+        <RemitoTemplate
           ref={templateRef}
           numero={numero}
           fecha={fecha}

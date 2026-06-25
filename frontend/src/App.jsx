@@ -9,6 +9,7 @@ const KitsAdmin = lazy(() => import('./pages/admin/Kits'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
 const GastosAdmin = lazy(() => import('./pages/admin/Gastos'));
 const Login = lazy(() => import('./pages/admin/Login'));
+const AuthCallback = lazy(() => import('./pages/admin/AuthCallback'));
 const OrdersAdmin = lazy(() => import('./pages/admin/Orders'));
 const ProductsAdmin = lazy(() => import('./pages/admin/Products'));
 const ReportsAdmin = lazy(() => import('./pages/admin/Reports'));
@@ -26,11 +27,13 @@ const ProductDetail = lazy(() => import('./pages/shop/ProductDetail'));
 const PresupuestosAdmin = lazy(() => import('./pages/admin/Presupuestos'));
 
 import ScrollToTop from './components/ScrollToTop';
+import WhatsAppButton from './components/ui/WhatsAppButton';
 
 function App() {
   return (
     <Router>
       <ScrollToTop />
+      <WhatsAppButton />
       <Toaster position="top-right" toastOptions={{
         style: {
           background: '#111111',
@@ -58,6 +61,7 @@ function App() {
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<Login />} />
+              <Route path="/admin/auth/callback" element={<AuthCallback />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="products" element={<ProductsAdmin />} />

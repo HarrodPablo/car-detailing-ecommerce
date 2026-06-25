@@ -14,8 +14,19 @@ const Catalog = () => {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const [categoriesOpen, setCategoriesOpen] = useState(true);
-  const [brandsOpen, setBrandsOpen] = useState(true);
+  const [categoriesOpen, setCategoriesOpen] = useState(window.innerWidth >= 1024);
+  const [brandsOpen, setBrandsOpen] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setCategoriesOpen(true);
+        setBrandsOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const currentCategory = searchParams.get('category');
   const currentBrand = searchParams.get('brand');

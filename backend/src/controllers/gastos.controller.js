@@ -131,9 +131,32 @@ Devolvé SOLO el JSON, sin texto adicional ni markdown.`;
   }
 };
 
+const togglePagado = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const gasto = await prisma.gasto.findUnique({ where: { id: parseInt(id) } });
+    if (!gasto) return res.status(404).json({ message: 'Gasto no encontrado' });
+    
+    const updated = await prisma.gasto.update({
+      where: { id: parseInt(id) },
+      data: { 
+        pagado: !gasto.pagado,
+        pagadoAt: !gasto.pagado ? new Date() : null
+      }
+    });
+    
+    res.json(updated);
+  } catch (error) {
+    console.error('Error toggling pagado:', error);
+    res.status(500).json({ message: 'Error actualizando gasto' });
+  }
+};
+
 module.exports = {
   getGastos,
   createGasto,
   deleteGasto,
-  escanearFactura
+  escanearFactura,
+  togglePagado
 };

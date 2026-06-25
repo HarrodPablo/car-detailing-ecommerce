@@ -20,7 +20,7 @@ const initLotExpiryJob = () => {
       `;
       
       if (soonExpiring.length > 0) {
-        console.log(`[ALERTA DE LOTES] ${soonExpiring.length} lotes por vencer o vencidos.`);
+
       }
     } catch (error) {
       console.error('Error en cron job de lotes:', error);

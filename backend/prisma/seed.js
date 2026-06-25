@@ -1,28 +1,15 @@
 const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Iniciando seed...');
 
-  // Credenciales admin
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-  await prisma.setting.upsert({
-    where: { key: 'admin_email' },
-    update: {},
-    create: { key: 'admin_email', value: 'admin@goodshop.com' }
-  });
-  await prisma.setting.upsert({
-    where: { key: 'admin_password' },
-    update: {},
-    create: { key: 'admin_password', value: hashedPassword }
-  });
+
 
   // Config WhatsApp
   await prisma.setting.upsert({
     where: { key: 'whatsapp_number' },
-    update: {},
-    create: { key: 'whatsapp_number', value: '5493814000000' }
+    update: { value: '5493813333090' },
+    create: { key: 'whatsapp_number', value: '5493813333090' }
   });
   await prisma.setting.upsert({
     where: { key: 'tienda_nombre' },
@@ -68,7 +55,7 @@ async function main() {
     });
   }
 
-  console.log('✅ Seed completado');
+
 }
 
 main()

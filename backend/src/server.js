@@ -1,4 +1,21 @@
 require('dotenv').config();
+
+const requiredEnvVars = [
+  'DATABASE_URL',
+  'JWT_SECRET', 
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'GOOGLE_CALLBACK_URL',
+  'ALLOWED_ADMIN_EMAILS',
+  'FRONTEND_URL'
+];
+
+requiredEnvVars.forEach(varName => {
+  if (!process.env[varName]) {
+    console.error(`❌ FATAL: Variable de entorno ${varName} no definida`);
+    process.exit(1);
+  }
+});
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -31,6 +48,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const passport = require('./config/passport');
+app.use(passport.initialize());
+
 // Basic route
 app.use('/api/health', require('./routes/health.routes'));
 
@@ -62,15 +82,15 @@ if (process.env.NODE_ENV !== 'test') {
   cron.schedule('*/4 * * * *', async () => {
     try {
       await prisma.$queryRaw`SELECT 1`;
-      console.log('[keep-alive] Neon ping OK');
+
     } catch (e) {
       console.error('[keep-alive] Neon ping failed:', e.message);
     }
   });
 
-  console.log('Cron jobs inicializados');
+
 }
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+
 });

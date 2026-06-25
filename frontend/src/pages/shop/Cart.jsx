@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import useCartStore from '../../store/cart.store';
@@ -9,22 +10,19 @@ import Remito from '../../components/shop/Remito';
 
 const Cart = () => {
   const { items, removeItem, updateQuantity, getCartTotal, clearCart } = useCartStore();
-  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [notes, setNotes] = useState('');
   const [showRemito, setShowRemito] = useState(false);
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await api.get('/settings');
-        setWhatsappNumber(res.data.whatsapp_number || '');
-      } catch (error) {
-        console.error('Error fetching settings', error);
-      }
-    };
-    fetchSettings();
-  }, []);
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const res = await api.get('/settings');
+      return res.data;
+    }
+  });
+
+  const whatsappNumber = settings?.whatsapp_number || '5493813333090';
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -51,12 +49,27 @@ const Cart = () => {
   };
 
   const handleConfirmWhatsApp = () => {
-    let msg = `🚗 *Nuevo Pedido - Good Shop*\n────────────────\n📦 *Productos:*\n`;
-    items.forEach(i => {
-      msg += `• ${i.quantity}x ${i.name} - ${formatCurrency(i.price)}\n`;
-    });
-    msg += `────────────────\n💰 *Total: ${formatCurrency(getCartTotal())}*\n────────────────\n`;
-    msg += `👤 *Cliente:* ${customerName || 'No especificado'}\n📍 *Notas:* ${notes || 'Ninguna'}`;
+    const linea = '-'.repeat(28);
+    
+    const productos = items.map(i => 
+      `  • ${i.quantity}x ${i.name} - ${formatCurrency(i.price * i.quantity)}`
+    ).join('\n');
+
+    const msg = 
+`*Nuevo Pedido - Good Shop* 🛒
+${linea}
+
+*Productos:*
+${productos}
+
+${linea}
+*Total: ${formatCurrency(getCartTotal())}*
+${linea}
+
+*Cliente:* ${customerName || 'No especificado'}
+*Notas:* ${notes || 'Sin notas'}
+
+_Good Shop Premium - Car Detailing Tucuman_`;
 
     const link = generateWhatsAppLink(whatsappNumber, msg);
     

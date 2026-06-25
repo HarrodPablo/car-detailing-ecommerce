@@ -3,7 +3,7 @@ const prisma = require('../prisma/client');
 
 // Run every hour
 cron.schedule('0 * * * *', async () => {
-  console.log('Running lot expiration check job...');
+
   try {
     const today = new Date();
     

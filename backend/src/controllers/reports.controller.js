@@ -59,11 +59,31 @@ const getResumenReport = async (req, res) => {
       comparativo = ((facturacion - prevFacturacion) / prevFacturacion) * 100;
     }
 
+    const gastosTotales = await prisma.gasto.aggregate({
+      _sum: { monto: true },
+      where: { fecha: { gte: startDate, lte: endDate } }
+    });
+
+    const gastosPagados = await prisma.gasto.aggregate({
+      _sum: { monto: true },
+      where: { pagado: true, fecha: { gte: startDate, lte: endDate } }
+    });
+
+    const gastosPendientes = await prisma.gasto.aggregate({
+      _sum: { monto: true },
+      where: { pagado: false, fecha: { gte: startDate, lte: endDate } }
+    });
+
     res.json({
       facturacion,
       pedidos,
       ticketPromedio,
-      comparativo: Number(comparativo.toFixed(2))
+      comparativo: Number(comparativo.toFixed(2)),
+      gastos: {
+        total: Number(gastosTotales._sum.monto || 0),
+        pagados: Number(gastosPagados._sum.monto || 0),
+        pendientes: Number(gastosPendientes._sum.monto || 0)
+      }
     });
   } catch (error) {
     console.error('Error en Controlador:', error);
@@ -264,16 +284,34 @@ const analizarIA = async (req, res) => {
       systemInstruction: 'Sos un analista de negocios especializado en ecommerce de productos de detailing automotriz argentino.'
     });
 
-    const prompt = `Analizá estos datos del período ${periodo}:
-- Facturación: $${resumen?.facturacion || 0}
+    const prompt = `Eres un analista financiero para una tienda de car detailing.
+Analizá estos datos del período ${periodo}:
+
+VENTAS:
+- Facturación total: $${resumen?.facturacion || 0}
 - Pedidos: ${resumen?.pedidos || 0}
 - Ticket promedio: $${resumen?.ticketPromedio || 0}
-- Gastos del período: $${gastosTotales || 0}
-- Ganancia estimada: $${(resumen?.facturacion || 0) - (gastosTotales || 0)}
-- Top productos: ${productosTop?.map(p => p.name + ': ' + p.cantidad + ' unidades').join(', ')}
-- Top marcas: ${marcas?.slice(0,3).map(m => m.name + ': $' + m.sales).join(', ')}
 
-Devolvé un análisis en español con: 1 conclusión principal en negrita, 2-3 observaciones clave y 1-2 recomendaciones accionables. Máximo 180 palabras. Sin tecnicismos.`;
+GASTOS:
+- Total gastos: $${resumen?.gastos?.total || 0}
+- Gastos pagados: $${resumen?.gastos?.pagados || 0}
+- Gastos pendientes: $${resumen?.gastos?.pendientes || 0}
+
+RENTABILIDAD:
+- Ganancia estimada: $${(resumen?.facturacion || 0) - (resumen?.gastos?.pagados || 0)}
+- Margen: ${(((resumen?.facturacion || 0) - (resumen?.gastos?.pagados || 0)) / (resumen?.facturacion || 1) * 100).toFixed(1)}%
+
+TOP CATEGORÍAS DE GASTOS:
+(N/A)
+
+TOP PRODUCTOS: ${productosTop?.map(p => p.name + ': ' + p.cantidad + ' u.').join(', ') || 'N/A'}
+TOP MARCAS: ${marcas?.slice(0,3).map(m => m.name + ': $' + m.sales).join(', ') || 'N/A'}
+
+Dame un análisis conciso con:
+1. Estado general del negocio
+2. Alertas (gastos altos, bajo margen, etc.)
+3. 3 recomendaciones concretas
+Respondé en español, de forma directa y práctica.`;
 
     const result = await model.generateContent(prompt);
     const text = await result.response.text();

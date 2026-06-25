@@ -143,8 +143,11 @@ const Reports = () => {
   const { resumen, ventas, productosTop, categorias, marcas, orders, gastos } = data;
 
   const totalGastos = gastos.reduce((sum, g) => sum + Number(g.monto), 0);
+  const gastosPagados = gastos.filter(g => g.pagado).reduce((acc, g) => acc + Number(g.monto), 0);
+  const gastosPendientes = gastos.filter(g => !g.pagado).reduce((acc, g) => acc + Number(g.monto), 0);
+  
   const facturacion = Number(resumen.facturacion);
-  const gananciaNeta = facturacion - totalGastos;
+  const gananciaNeta = facturacion - gastosPagados;
 
   const handleAnalizarIA = async () => {
     setIsAnalyzing(true);
@@ -298,16 +301,20 @@ const Reports = () => {
               subtitleColorClass={comparativoColor}
             />
             <DashboardWidget 
-              title="Gastos" 
+              title="Gastos (Total)" 
               value={formatCurrency(totalGastos)} 
               icon={Receipt} 
               colorClass="bg-red-500 text-red-500" 
+              subtitle={`Pendientes: ${formatCurrency(gastosPendientes)}`}
+              subtitleColorClass="text-red-400"
             />
             <DashboardWidget 
               title="Ganancia Estimada" 
               value={formatCurrency(gananciaNeta)} 
               icon={HandCoins} 
               colorClass={gananciaColor} 
+              subtitle={`Gastos pagados: ${formatCurrency(gastosPagados)}`}
+              subtitleColorClass={gananciaColor}
             />
             <DashboardWidget 
               title="Pedidos" 

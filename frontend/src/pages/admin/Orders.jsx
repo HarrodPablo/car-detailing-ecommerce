@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import html2pdf from 'html2pdf.js';
 import { FileDown, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import api from '../../lib/axios';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import html2pdf from 'html2pdf.js';
 
 const OrdersAdmin = () => {
   const [orders, setOrders] = useState([]);
@@ -152,10 +152,10 @@ const OrdersAdmin = () => {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-heading font-bold text-white">Pedidos</h1>
-        
+
         <div className="flex flex-col md:flex-row items-center gap-4">
-          <select 
-            value={filter} 
+          <select
+            value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="bg-dark-900 border border-dark-border text-white rounded p-2 focus:outline-none focus:border-brand"
           >
@@ -168,17 +168,17 @@ const OrdersAdmin = () => {
 
           {filter === 'custom' && (
             <div className="flex items-center gap-2">
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={customDates.desde}
-                onChange={(e) => setCustomDates({...customDates, desde: e.target.value})}
+                onChange={(e) => setCustomDates({ ...customDates, desde: e.target.value })}
                 className="bg-dark-900 border border-dark-border text-white rounded p-2 focus:border-brand outline-none"
               />
               <span className="text-gray-400">-</span>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={customDates.hasta}
-                onChange={(e) => setCustomDates({...customDates, hasta: e.target.value})}
+                onChange={(e) => setCustomDates({ ...customDates, hasta: e.target.value })}
                 className="bg-dark-900 border border-dark-border text-white rounded p-2 focus:border-brand outline-none"
               />
             </div>
@@ -217,7 +217,7 @@ const OrdersAdmin = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <select 
+                      <select
                         value={order.status}
                         onChange={(e) => updateStatus(order, e.target.value)}
                         className="bg-dark-base border border-dark-border text-sm text-gray-300 rounded p-1"
@@ -227,16 +227,16 @@ const OrdersAdmin = () => {
                         <option value="entregado">Entregado</option>
                         <option value="cancelado">Cancelado</option>
                       </select>
-                      
-                      <button 
+
+                     {/* <button
                         onClick={() => generatePDF(order)}
                         title="Descargar Remito"
                         className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-900 rounded transition-colors"
                       >
                         <FileDown size={18} />
-                      </button>
+                      </button>*/}
 
-                      <button 
+                      <button
                         onClick={() => deleteOrder(order.id)}
                         title="Eliminar Pedido"
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"

@@ -8,7 +8,7 @@ const initStockAlertJob = () => {
       const lowStockProducts = await prisma.$queryRaw`SELECT id, name, stock, "minStock" FROM "Product" WHERE stock <= "minStock"`;
       
       if (lowStockProducts.length > 0) {
-        console.log(`[ALERTA DE STOCK] ${lowStockProducts.length} productos con stock bajo.`);
+
         // Here we could trigger a push notification, email, etc.
       }
     } catch (error) {

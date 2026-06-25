@@ -1,18 +1,30 @@
 import { Outlet, Link } from 'react-router-dom';
-import { ShoppingCart, Menu } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ShoppingCart, Menu, X } from 'lucide-react';
 import useCartStore from '../../store/cart.store';
 import logoImg from '../../assets/goodshop.svg';
 import Footer from './Footer';
 
 const ShopLayout = () => {
   const { items, getCartTotal } = useCartStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-dark-base">
       <header className="bg-dark-950 border-b border-brand/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button className="md:hidden text-white" aria-label="Abrir menú"><Menu /></button>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-white" aria-label="Alternar menú">
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
             <Link to="/" className="flex items-center">
               <img src={logoImg} alt="Good Shop Logo" className="h-8 brightness-0 invert" />
             </Link>
@@ -35,6 +47,28 @@ const ShopLayout = () => {
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/95 flex flex-col pt-24 backdrop-blur-sm">
+          <nav className="flex flex-col px-8 gap-8">
+            <Link 
+              to="/" 
+              onClick={() => setMenuOpen(false)}
+              className="text-white text-3xl font-heading font-black uppercase tracking-widest hover:text-brand transition-colors"
+            >
+              Inicio
+            </Link>
+            <Link 
+              to="/catalog" 
+              onClick={() => setMenuOpen(false)}
+              className="text-white text-3xl font-heading font-black uppercase tracking-widest hover:text-brand transition-colors"
+            >
+              Catálogo
+            </Link>
+          </nav>
+        </div>
+      )}
 
       <main className="flex-1 flex flex-col">
         <Outlet />

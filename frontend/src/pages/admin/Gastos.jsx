@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Upload, Receipt, Plus, Trash2, ChevronDown, ChevronUp, RefreshCw, X, Save } from 'lucide-react';
+import { Upload, Receipt, Plus, Trash2, ChevronDown, ChevronUp, RefreshCw, X, Save, Check } from 'lucide-react';
 import api from '../../lib/axios';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
@@ -132,6 +132,15 @@ const GastosAdmin = () => {
       fetchGastos();
     } catch (error) {
       toast.error('Error al eliminar');
+    }
+  };
+
+  const handleTogglePagado = async (id) => {
+    try {
+      await api.patch(`/gastos/${id}/toggle-pagado`);
+      fetchGastos();
+    } catch (error) {
+      toast.error('Error al actualizar el gasto');
     }
   };
 
@@ -379,11 +388,23 @@ const GastosAdmin = () => {
                           <span className="px-2 py-1 text-xs uppercase rounded bg-dark-base text-gray-400 border border-dark-border">
                             {gasto.categoria}
                           </span>
+                          {gasto.pagado && (
+                            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full ml-2">
+                              Pagado
+                            </span>
+                          )}
                         </td>
-                        <td className="p-4 text-right font-mono font-bold text-red-400">
+                        <td className={`p-4 text-right font-mono font-bold text-red-400 ${gasto.pagado ? 'line-through opacity-50' : ''}`}>
                           {formatCurrency(gasto.monto)}
                         </td>
-                        <td className="p-4 text-center">
+                        <td className="p-4 text-center flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleTogglePagado(gasto.id)}
+                            title={gasto.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
+                            className={`p-2 rounded-full transition-all duration-200 ${gasto.pagado ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'}`}
+                          >
+                            <Check size={16} />
+                          </button>
                           <button onClick={() => handleDelete(gasto.id)} className="text-gray-500 hover:text-red-500 transition-colors p-1">
                             <Trash2 size={18} />
                           </button>

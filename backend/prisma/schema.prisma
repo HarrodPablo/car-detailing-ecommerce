@@ -155,5 +155,7 @@ model Gasto {
   proveedor   String?
   facturaUrl  String?
   items       Json?    // Array de líneas extraídas de la factura
+  pagado      Boolean  @default(false)
+  pagadoAt    DateTime?
   createdAt   DateTime @default(now())
 }
