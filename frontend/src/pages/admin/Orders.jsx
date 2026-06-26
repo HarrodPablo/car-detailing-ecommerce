@@ -1,15 +1,16 @@
-import html2pdf from 'html2pdf.js';
 import { FileDown, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../lib/axios';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import Remito from '../../components/shop/Remito';
 
 const OrdersAdmin = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [customDates, setCustomDates] = useState({ desde: '', hasta: '' });
+  const [selectedOrderForRemito, setSelectedOrderForRemito] = useState(null);
 
   const fetchOrders = async () => {
     try {
@@ -39,7 +40,7 @@ const OrdersAdmin = () => {
       fetchOrders();
 
       if (status === 'entregado') {
-        generatePDF(order);
+        setSelectedOrderForRemito(order);
         if (order.customerPhone) {
           const name = order.customerName || 'Cliente';
           const msg = encodeURIComponent(`Hola ${name}, te adjuntamos el comprobante de tu pedido #${order.id}. ¡Gracias por tu compra! - Good Shop`);
@@ -66,85 +67,7 @@ const OrdersAdmin = () => {
     }
   };
 
-  const generatePDF = (order) => {
-    const container = document.createElement('div');
-    container.style.padding = '40px';
-    container.style.fontFamily = 'Arial, sans-serif';
-    container.style.color = '#333';
-    container.style.backgroundColor = '#fff';
-    container.style.width = '800px';
 
-    let itemsHtml = '';
-    if (order.items && order.items.length > 0) {
-      itemsHtml = order.items.map(item => {
-        const name = item.product?.name || item.kit?.name || 'Item eliminado';
-        return `
-          <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.quantity}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${name}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${formatCurrency(item.unitPrice)}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${formatCurrency(item.subtotal)}</td>
-          </tr>
-        `;
-      }).join('');
-    } else {
-      itemsHtml = `<tr><td colspan="4" style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">Sin ítems</td></tr>`;
-    }
-
-    container.innerHTML = `
-      <div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-          <h1 style="margin: 0; font-size: 28px; color: #8B0000; text-transform: uppercase; font-weight: bold;">REMITO INTERNO</h1>
-          <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Documento de control comercial</p>
-        </div>
-        <div style="text-align: right;">
-          <p style="margin: 0; font-size: 16px; font-weight: bold;">Pedido #${order.id}</p>
-          <p style="margin: 5px 0 0 0; font-size: 14px;">Fecha: ${formatDate(order.createdAt)}</p>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; background-color: #f9f9f9;">
-        <h3 style="margin: 0 0 10px 0; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Datos del Cliente</h3>
-        <p style="margin: 5px 0;"><strong>Nombre:</strong> ${order.customerName || 'Cliente anónimo'}</p>
-        <p style="margin: 5px 0;"><strong>Teléfono:</strong> ${order.customerPhone || '-'}</p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-        <thead>
-          <tr style="background-color: #f0f0f0;">
-            <th style="padding: 10px; border-bottom: 2px solid #ccc; text-align: left;">Cant.</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ccc; text-align: left;">Descripción</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ccc; text-align: right;">P. Unit.</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ccc; text-align: right;">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${itemsHtml}
-        </tbody>
-      </table>
-
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
-        <div style="border: 2px solid #8B0000; padding: 15px 30px; background-color: #fffaf0;">
-          <p style="margin: 0; font-size: 18px;"><strong>Total:</strong> <span style="font-size: 24px; color: #8B0000; font-weight: bold; margin-left: 15px;">${formatCurrency(order.total)}</span></p>
-        </div>
-      </div>
-
-      <div style="text-align: center; border-top: 1px dashed #ccc; padding-top: 20px; color: #888;">
-        <p style="margin: 0; font-size: 12px; font-weight: bold; text-transform: uppercase;">Documento No Válido como Factura</p>
-        <p style="margin: 5px 0 0 0; font-size: 11px;">Uso exclusivo interno para control de stock y despachos.</p>
-      </div>
-    `;
-
-    const opt = {
-      margin: 10,
-      filename: `Pedido_${order.id}_${new Date().getTime()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(container).save();
-  };
 
   if (loading) return <div className="text-center py-10">Cargando...</div>;
 
@@ -228,13 +151,13 @@ const OrdersAdmin = () => {
                         <option value="cancelado">Cancelado</option>
                       </select>
 
-                     {/* <button
-                        onClick={() => generatePDF(order)}
-                        title="Descargar Remito"
+                      <button
+                        onClick={() => setSelectedOrderForRemito(order)}
+                        title="Ver Remito"
                         className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-900 rounded transition-colors"
                       >
                         <FileDown size={18} />
-                      </button>*/}
+                      </button>
 
                       <button
                         onClick={() => deleteOrder(order.id)}
@@ -256,6 +179,43 @@ const OrdersAdmin = () => {
           </table>
         </div>
       </div>
+
+      {selectedOrderForRemito && (() => {
+        const rawNotes = selectedOrderForRemito.notes || '';
+        const hasPayment = rawNotes.startsWith('Pago: ');
+        const paymentMethodFromNotes = hasPayment ? rawNotes.split('\n')[0].replace('Pago: ', '') : undefined;
+        const actualNotes = hasPayment ? rawNotes.split('\n').slice(1).join('\n') : rawNotes;
+
+        return (
+          <Remito
+            orderId={selectedOrderForRemito.id}
+            showDownload={true}
+            items={selectedOrderForRemito.items.map(item => ({
+              name: item.product?.name || item.kit?.name || 'Item eliminado',
+              quantity: item.quantity,
+              price: item.unitPrice
+            }))}
+            customerName={selectedOrderForRemito.customerName}
+            paymentMethod={paymentMethodFromNotes}
+            notes={[
+              selectedOrderForRemito.customerPhone ? `Tel: ${selectedOrderForRemito.customerPhone}` : '',
+              actualNotes
+            ].filter(Boolean).join('\n\n')}
+            total={selectedOrderForRemito.total}
+            onClose={() => setSelectedOrderForRemito(null)}
+            onConfirm={() => {
+              if (selectedOrderForRemito.customerPhone) {
+                const name = selectedOrderForRemito.customerName || 'Cliente';
+                const msg = encodeURIComponent(`Hola ${name}, te adjuntamos el comprobante de tu pedido #${selectedOrderForRemito.id}. ¡Gracias por tu compra! - Good Shop`);
+                const rawPhone = selectedOrderForRemito.customerPhone.replace(/\D/g, '');
+                window.open(`https://wa.me/54${rawPhone}?text=${msg}`, '_blank');
+              } else {
+                toast('No hay teléfono registrado para este pedido', { icon: '⚠️' });
+              }
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };

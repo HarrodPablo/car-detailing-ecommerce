@@ -4,8 +4,8 @@ import logoSvg from '../../assets/goodshop.svg';
 import { printRemito } from '../../utils/printRemito';
 import { formatCurrency } from '../../utils/formatters';
 
-const Remito = ({ items, customerName, notes, total, onClose, onConfirm }) => {
-  const remitoNumber = useMemo(() => '#' + String(Date.now()).slice(-6), []);
+const Remito = ({ items, customerName, notes, paymentMethod, total, onClose, onConfirm, orderId, showDownload = false }) => {
+  const remitoNumber = useMemo(() => orderId ? `#${orderId}` : '#' + String(Date.now()).slice(-6), [orderId]);
   const today = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   if (!items || items.length === 0) return null;
@@ -21,15 +21,19 @@ const Remito = ({ items, customerName, notes, total, onClose, onConfirm }) => {
           </button>
           
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button onClick={printRemito} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#2D2D2D] border border-[#2D2D2D] text-white px-4 py-2 rounded-lg font-bold transition-colors">
-              <Download size={18} /> Descargar PDF
-            </button>
-            <button 
-              onClick={onConfirm}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-lg shadow-[#25D366]/20"
-            >
-              <Smartphone size={18} /> Confirmar y enviar por WhatsApp
-            </button>
+            {showDownload && (
+              <button onClick={printRemito} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#2D2D2D] border border-[#2D2D2D] text-white px-4 py-2 rounded-lg font-bold transition-colors">
+                <Download size={18} /> Descargar PDF
+              </button>
+            )}
+            {onConfirm && (
+              <button 
+                onClick={onConfirm}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-lg shadow-[#25D366]/20"
+              >
+                <Smartphone size={18} /> Confirmar y enviar por WhatsApp
+              </button>
+            )}
           </div>
         </div>
 
@@ -41,7 +45,7 @@ const Remito = ({ items, customerName, notes, total, onClose, onConfirm }) => {
             <div>
               <img src={logoSvg} alt="Good Shop" style={{ width: 160 }} crossOrigin="anonymous" className="mb-2 brightness-0 invert" />
               <p className="font-bold text-lg">Good Shop Premium</p>
-              <p className="text-sm opacity-90">productos de detailing automotriz</p>
+              <p className="text-sm opacity-90">Productos de detailing</p>
             </div>
             <div className="text-right">
               <h2 className="text-3xl font-black tracking-wider mb-2">REMITO {remitoNumber}</h2>
@@ -53,14 +57,26 @@ const Remito = ({ items, customerName, notes, total, onClose, onConfirm }) => {
             {/* Cliente */}
             <div className="mb-8 border-b pb-6 border-gray-200">
               <h3 className="font-bold text-[#8B0000] uppercase tracking-wider mb-4">Datos del Cliente</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <p className="text-gray-500 text-sm">Nombre / Razón Social</p>
-                  <p className="font-bold text-lg">{customerName || 'No especificado'}</p>
+                  <div className="mb-4">
+                    <p className="text-gray-500 text-sm">Nombre / Razón Social</p>
+                    <p className="font-bold text-lg text-gray-900">{customerName || 'No especificado'}</p>
+                  </div>
+                  {paymentMethod && (
+                    <div>
+                      <p className="text-gray-500 text-sm">Forma de Pago</p>
+                      <span className={`inline-block px-3 py-1 mt-1 rounded text-sm font-bold uppercase ${paymentMethod.toLowerCase() === 'efectivo' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800 border border-blue-200'}`}>
+                        {paymentMethod}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Notas / Datos de Envío</p>
-                  <p className="font-medium text-gray-800">{notes || '—'}</p>
+                  <div className="bg-[#f9f9f9] p-4 rounded border border-gray-100 min-h-[80px]">
+                    <p className="font-medium text-gray-800 whitespace-pre-wrap">{notes || '—'}</p>
+                  </div>
                 </div>
               </div>
             </div>

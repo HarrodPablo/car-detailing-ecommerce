@@ -129,8 +129,8 @@ const ProductDetail = () => {
             )}
           </div>
 
-          <p className="text-[#999] text-base leading-relaxed mt-4">
-            {product.description || product.shortDescription || 'Sin descripción disponible para este producto.'}
+          <p className="text-[#999] text-base leading-relaxed mt-4 whitespace-pre-wrap">
+            {product.longDescription || product.shortDescription || 'Sin descripción disponible para este producto.'}
           </p>
 
           {/* Especificaciones */}

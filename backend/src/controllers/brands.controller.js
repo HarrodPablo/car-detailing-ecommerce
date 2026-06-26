@@ -55,7 +55,7 @@ const updateBrand = async (req, res) => {
 const deleteBrand = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    
+
     // Verificar si tiene productos asociados
     const productsCount = await prisma.product.count({ where: { brandId: id } });
     if (productsCount > 0) {

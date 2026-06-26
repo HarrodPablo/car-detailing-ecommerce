@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { SearchX, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../../lib/axios';
-import ProductCard from '../../components/shop/ProductCard';
+import { ChevronDown, ChevronUp, SearchX, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ComboCard from '../../components/shop/ComboCard';
-import { SkeletonProductCard, SkeletonComboCard } from '../../components/ui/SkeletonCard';
+import ProductCard from '../../components/shop/ProductCard';
+import { SkeletonComboCard, SkeletonProductCard } from '../../components/ui/SkeletonCard';
+import api from '../../lib/axios';
 
 const EMPTY_ARRAY = [];
 
@@ -13,7 +13,7 @@ const Catalog = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [categoriesOpen, setCategoriesOpen] = useState(window.innerWidth >= 1024);
   const [brandsOpen, setBrandsOpen] = useState(window.innerWidth >= 1024);
 
@@ -30,7 +30,8 @@ const Catalog = () => {
 
   const currentCategory = searchParams.get('category');
   const currentBrand = searchParams.get('brand');
-  
+  const currentSort = searchParams.get('sort') || 'newest';
+
   const isCombosView = currentCategory === 'combo';
 
   // Fetch Categories for Sidebar
@@ -75,7 +76,7 @@ const Catalog = () => {
           }
           url = `/products?${params.toString()}`;
         }
-        
+
         const res = await api.get(url);
         setItems(Array.isArray(res.data) ? res.data : [res.data]);
       } catch (error) {
@@ -125,29 +126,51 @@ const Catalog = () => {
     });
   };
 
+  const handleSortChange = (e) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('sort', e.target.value);
+      return newParams;
+    });
+  };
+
+  const sortedItems = [...items].sort((a, b) => {
+    const priceA = Number(a.salePrice || a.kitPrice || 0);
+    const priceB = Number(b.salePrice || b.kitPrice || 0);
+
+    if (currentSort === 'price_asc') {
+      return priceA - priceB;
+    }
+    if (currentSort === 'price_desc') {
+      return priceB - priceA;
+    }
+    // newest (default)
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
     <div className="bg-dark-base min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row gap-8">
-          
+
           {/* Sidebar */}
           <aside className="w-full md:w-64 shrink-0 bg-[#111] md:border-r md:border-b-0 border-b border-[#2D2D2D] md:sticky md:top-24 h-fit p-6 rounded-xl md:rounded-r-none z-10">
-            
+
             {/* SECCIÓN CATEGORÍAS */}
             <div>
-              <div 
+              <div
                 onClick={() => setCategoriesOpen(!categoriesOpen)}
                 className={`flex items-center justify-between cursor-pointer group ${categoriesOpen ? 'mb-4' : ''}`}
               >
                 <h3 className="font-heading font-black text-white text-sm tracking-widest uppercase transition-colors group-hover:text-[#8B0000]">
                   Categorías
                 </h3>
-                {categoriesOpen ? <ChevronUp size={14} className="text-[#666] group-hover:text-[#8B0000]"/> : <ChevronDown size={14} className="text-[#666] group-hover:text-[#8B0000]"/>}
+                {categoriesOpen ? <ChevronUp size={14} className="text-[#666] group-hover:text-[#8B0000]" /> : <ChevronDown size={14} className="text-[#666] group-hover:text-[#8B0000]" />}
               </div>
               {categoriesOpen && <div className="h-px bg-[#2D2D2D] mb-4" />}
-              
+
               <div className={`space-y-1 overflow-hidden transition-all duration-300 ${categoriesOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
-                <div 
+                <div
                   onClick={handleClearAllCategories}
                   className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${!currentCategory && !currentBrand ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
                 >
@@ -160,8 +183,8 @@ const Catalog = () => {
                   ))
                 ) : (
                   normalCategories.map(cat => (
-                    <div 
-                      key={cat.id} 
+                    <div
+                      key={cat.id}
                       onClick={() => handleSetCategory(cat.name)}
                       className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${currentCategory === cat.name ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
                     >
@@ -185,9 +208,9 @@ const Catalog = () => {
                 </span>
               </div>
               <div className="h-px bg-[#2D2D2D] mb-4" />
-              
+
               <div className="space-y-1">
-                <div 
+                <div
                   onClick={() => handleSetCategory('combo')}
                   className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${currentCategory === 'combo' ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
                 >
@@ -200,19 +223,19 @@ const Catalog = () => {
 
             {/* SECCIÓN MARCAS */}
             <div>
-              <div 
+              <div
                 onClick={() => setBrandsOpen(!brandsOpen)}
                 className={`flex items-center justify-between cursor-pointer group ${brandsOpen ? 'mb-4' : ''}`}
               >
                 <h3 className="font-heading font-black text-white text-sm tracking-widest uppercase transition-colors group-hover:text-[#8B0000]">
                   Marcas
                 </h3>
-                {brandsOpen ? <ChevronUp size={14} className="text-[#666] group-hover:text-[#8B0000]"/> : <ChevronDown size={14} className="text-[#666] group-hover:text-[#8B0000]"/>}
+                {brandsOpen ? <ChevronUp size={14} className="text-[#666] group-hover:text-[#8B0000]" /> : <ChevronDown size={14} className="text-[#666] group-hover:text-[#8B0000]" />}
               </div>
               {brandsOpen && <div className="h-px bg-[#2D2D2D] mb-4" />}
-              
+
               <div className={`space-y-1 overflow-hidden transition-all duration-300 ${brandsOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
-                <div 
+                <div
                   onClick={handleClearBrand}
                   className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${!currentBrand && !isCombosView && currentCategory ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
                 >
@@ -225,8 +248,8 @@ const Catalog = () => {
                   ))
                 ) : (
                   brands.map(brand => (
-                    <div 
-                      key={brand.id} 
+                    <div
+                      key={brand.id}
                       onClick={() => handleSetBrand(brand.name)}
                       className={`block py-1.5 text-sm transition-colors cursor-pointer border-l-2 ${currentBrand === brand.name ? 'text-[#8B0000] font-bold border-[#8B0000] pl-2' : 'text-[#666] hover:text-white border-transparent hover:border-[#2D2D2D] pl-3'}`}
                     >
@@ -275,8 +298,12 @@ const Catalog = () => {
                   </div>
                 )}
               </div>
-              
-              <select className="bg-[#111] border border-[#2D2D2D] text-white text-sm rounded px-3 py-2 outline-none focus:border-brand cursor-pointer mt-1">
+
+              <select
+                value={currentSort}
+                onChange={handleSortChange}
+                className="bg-[#111] border border-[#2D2D2D] text-white text-sm rounded px-3 py-2 outline-none focus:border-brand cursor-pointer mt-1"
+              >
                 <option value="newest">Más nuevo</option>
                 <option value="price_asc">Precio ↑</option>
                 <option value="price_desc">Precio ↓</option>
@@ -294,9 +321,9 @@ const Catalog = () => {
                   )
                 ))}
               </div>
-            ) : items.length > 0 ? (
+            ) : sortedItems.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {items.map(item => (
+                {sortedItems.map(item => (
                   isCombosView ? (
                     <ComboCard key={item.id} combo={item} />
                   ) : (
@@ -311,7 +338,7 @@ const Catalog = () => {
                 <p className="text-[#666] text-lg mb-8 text-center font-sans">
                   No encontramos resultados con ese filtro
                 </p>
-                <button 
+                <button
                   onClick={handleClearAllCategories}
                   className="px-6 py-2.5 border border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000] hover:text-white rounded transition-colors font-sans font-medium uppercase tracking-wider text-sm"
                 >
@@ -320,7 +347,7 @@ const Catalog = () => {
               </div>
             )}
           </main>
-          
+
         </div>
       </div>
     </div>

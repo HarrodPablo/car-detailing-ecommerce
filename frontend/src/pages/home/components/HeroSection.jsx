@@ -1,10 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
 import { SkeletonHeroCard } from '../../../../src/components/ui/SkeletonCard';
 import api from '../../../lib/axios';
 import { generateWhatsAppLink } from '../../../utils/whatsapp';
 
+const VIDEO_URL = 'https://res.cloudinary.com/dgvwzbnez/video/upload/v1782496446/Slow_motion_close_up_of_a_hand_p31dce.mp4';
+
 const HeroSection = () => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        document.addEventListener('click', () => video.play(), { once: true });
+      });
+    }
+  }, []);
+
   const { data: products, isLoading } = useQuery({
     queryKey: ['hero-product'],
     queryFn: async () => {
@@ -31,15 +48,36 @@ const HeroSection = () => {
       </style>
 
       {/* Background Image with Dark Gradient Overlay */}
+      {/* Background Image with Dark Gradient Overlay */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=2070&auto=format&fit=crop"
-          alt="Car detailing background"
-          className="w-full h-full object-cover object-center opacity-40"
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 1,
+            opacity: 1,
+            transform: 'scale(1.15) translateY(6%)'
+          }}
+        >
+          <source src={VIDEO_URL} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-r 
+          from-dark-base via-dark-base/90 to-transparent"
+          style={{ zIndex: 2 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-dark-base via-dark-base/90 to-transparent"></div>
-        {/* Bottom gradient fade for smooth transition to next section */}
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-base to-transparent h-full w-full"></div>
+        <div className="absolute inset-0 bg-gradient-to-t 
+          from-dark-base to-transparent"
+          style={{ zIndex: 2 }}
+        />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-20 flex flex-col lg:flex-row items-center justify-between gap-12">

@@ -12,6 +12,7 @@ const Cart = () => {
   const { items, removeItem, updateQuantity, getCartTotal, clearCart } = useCartStore();
   const [customerName, setCustomerName] = useState('');
   const [notes, setNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('efectivo');
   const [showRemito, setShowRemito] = useState(false);
 
   const { data: settings } = useQuery({
@@ -31,7 +32,7 @@ const Cart = () => {
     try {
       await api.post('/orders', {
         customerName: customerName || 'Cliente Web',
-        notes,
+        notes: `Pago: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Transferencia'}\n${notes}`.trim(),
         total: getCartTotal(),
         items: items.map(i => ({
           productId: i.productId,
@@ -67,6 +68,7 @@ ${linea}
 ${linea}
 
 *Cliente:* ${customerName || 'No especificado'}
+*Forma de Pago:* ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Transferencia'}
 *Notas:* ${notes || 'Sin notas'}
 
 _Good Shop Premium - Car Detailing Tucuman_`;
@@ -157,6 +159,33 @@ _Good Shop Premium - Car Detailing Tucuman_`;
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">Forma de Pago</label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className={`cursor-pointer border rounded-lg p-3 flex items-center justify-center gap-2 transition-colors ${paymentMethod === 'efectivo' ? 'bg-brand/20 border-brand text-brand' : 'bg-dark-900 border-dark-border text-gray-400 hover:border-gray-500'}`}>
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
+                    value="efectivo" 
+                    checked={paymentMethod === 'efectivo'}
+                    onChange={e => setPaymentMethod(e.target.value)}
+                    className="hidden"
+                  />
+                  Efectivo
+                </label>
+                <label className={`cursor-pointer border rounded-lg p-3 flex items-center justify-center gap-2 transition-colors ${paymentMethod === 'transferencia' ? 'bg-brand/20 border-brand text-brand' : 'bg-dark-900 border-dark-border text-gray-400 hover:border-gray-500'}`}>
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
+                    value="transferencia" 
+                    checked={paymentMethod === 'transferencia'}
+                    onChange={e => setPaymentMethod(e.target.value)}
+                    className="hidden"
+                  />
+                  Transferencia
+                </label>
+              </div>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Notas / Envío</label>
               <textarea 
                 value={notes}
@@ -179,6 +208,7 @@ _Good Shop Premium - Car Detailing Tucuman_`;
           items={items}
           customerName={customerName}
           notes={notes}
+          paymentMethod={paymentMethod}
           total={getCartTotal()}
           onClose={() => setShowRemito(false)}
           onConfirm={handleConfirmWhatsApp}

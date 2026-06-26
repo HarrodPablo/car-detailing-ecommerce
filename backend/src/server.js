@@ -50,7 +50,19 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://images.unsplash.com", "https://i.ibb.co", "https://*.ibb.co"],
+      mediaSrc: ["'self'", "blob:", "https://res.cloudinary.com"],
+      connectSrc: ["'self'", "https://api.cloudinary.com"],
+    },
+  },
+}));
 app.use(cors(corsOptions));
 
 app.use(express.json());
@@ -74,8 +86,8 @@ app.use('/api/alerts', require('./routes/alerts.routes'));
 app.use('/api/lots', require('./routes/lots.routes'));
 // app.use('/api/remove-bg', require('./routes/removebg.routes'));
 app.use('/api/remove-bg', (req, res) => {
-  res.status(503).json({ 
-    message: 'Función de remoción de fondo temporalmente deshabilitada en este entorno.' 
+  res.status(503).json({
+    message: 'Función de remoción de fondo temporalmente deshabilitada en este entorno.'
   });
 });
 
