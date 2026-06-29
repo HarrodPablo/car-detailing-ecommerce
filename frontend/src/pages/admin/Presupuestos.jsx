@@ -253,17 +253,17 @@ const PresupuestosAdmin = () => {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6 pb-20 md:pb-0">
         {/*<button 
           onClick={handleWhatsApp}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 hover:bg-[#25D366]/20 font-bold rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 hover:bg-[#25D366]/20 font-bold rounded-lg transition-colors w-full sm:w-auto"
         >
           <MessageCircle size={20} />
           Enviar por WhatsApp
         </button>*/}
         <button
           onClick={handleDownloadPDF}
-          className="btn-primary flex items-center justify-center gap-2 py-3"
+          className="btn-primary flex items-center justify-center gap-2 py-3 w-full sm:w-auto"
         >
           <FileDown size={20} />
           Descargar PDF

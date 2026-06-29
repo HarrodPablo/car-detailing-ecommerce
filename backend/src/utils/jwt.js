@@ -7,7 +7,7 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-const generateToken = (payload, expiresIn = '8h') => {
+const generateToken = (payload, expiresIn = '24h') => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn });
 };
 

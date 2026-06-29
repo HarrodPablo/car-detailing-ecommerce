@@ -1,4 +1,4 @@
-import logoSvg from '../assets/goodshop_pre.svg';
+import logoSvg from '../assets/goodshop_logo.svg';
 
 const loadImage = (src) => new Promise((resolve, reject) => {
   const img = new Image();

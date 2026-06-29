@@ -2,7 +2,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Menu, X } from 'lucide-react';
 import useCartStore from '../../store/cart.store';
-import logoImg from '../../assets/goodshop.svg';
+import logoImg from '../../assets/goodshop_logo.svg'
 import Footer from './Footer';
 
 const ShopLayout = () => {

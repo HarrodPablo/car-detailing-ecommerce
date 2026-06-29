@@ -22,6 +22,12 @@ const Login = () => {
             Email no autorizado para acceder al panel admin
           </div>
         )}
+
+        {error === 'sesion-expirada' && (
+          <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 p-3 rounded-lg text-sm text-center mb-6">
+            Tu sesión expiró. Por favor iniciá sesión nuevamente.
+          </div>
+        )}
         
         <button
           onClick={handleGoogleLogin}

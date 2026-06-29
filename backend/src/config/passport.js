@@ -25,7 +25,7 @@ passport.use(new GoogleStrategy({
     }
 
     // generateToken recibe el payload como objeto
-    const token = generateToken({ email, role: 'admin' }, '8h');
+    const token = generateToken({ email, role: 'admin' }, '24h');
 
     return done(null, { email, token });
   } catch (error) {

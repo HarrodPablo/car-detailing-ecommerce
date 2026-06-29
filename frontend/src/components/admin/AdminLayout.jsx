@@ -9,20 +9,23 @@ import {
   ShoppingCart,
   Tags,
   Receipt,
-  FileText
+  FileText,
+  Menu,
+  X
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/auth.store';
-import logoImg from '../../assets/goodshop.svg';
+import logoImg from '../../assets/goodshop_logo.svg'
 
-const SidebarItem = ({ icon: Icon, label, to }) => {
+const SidebarItem = ({ icon: Icon, label, to, onClick }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
 
   return (
     <Link
       to={to}
+      onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 mb-1 transition-colors relative ${isActive ? 'text-brand font-bold bg-dark-900' : 'text-gray-400 hover:text-gray-200 hover:bg-dark-border'} rounded-r-lg`}
     >
       {isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand"></div>}
@@ -35,6 +38,7 @@ const SidebarItem = ({ icon: Icon, label, to }) => {
 const AdminLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -66,26 +70,48 @@ const AdminLayout = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex h-screen bg-dark-base overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 bg-dark-card border-r border-dark-border flex flex-col h-full shrink-0 z-10">
+    <div className="min-h-screen bg-dark-base flex">
+
+      {/* ── OVERLAY mobile ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── SIDEBAR ── */}
+      <aside className={`
+        fixed top-0 left-0 h-full w-64 bg-dark-card border-r border-dark-border
+        z-30 flex flex-col
+        transition-transform duration-300 ease-in-out
+        md:translate-x-0 md:static md:z-auto
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Botón cerrar — solo mobile */}
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-white md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <X size={20} />
+        </button>
         <div className="p-6">
           <Link to="/" className="inline-block text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 203 57" className="h-8 fill-current"><path d="M33.5 12.5c3.3.7 7.6 1.4 9.5 1.4 6.6.1 10.5 1.5 10.8 3.9.3 2.1.1 2.1-8.5 1.9s-9-.1-17.5 4.1C16.9 29.2 10.4 35.1 9.5 40.3c-.6 3-.3 4.2 1.1 5.9 1.6 1.7 2.7 1.9 7 1.5 5.7-.6 17.1-5.4 20.3-8.6 3.6-3.6 2.7-4.4-3.9-3.8-4.9.6-6 .4-6-.8 0-2.2 2.7-3.2 11.9-4.6 8.3-1.3 8.4-1.3 10.3 1 1.8 2.3 1.8 2.4-.5 5.5-4 5.2-6.7 11.3-6.7 15.1 0 1.9-.4 3.5-.8 3.5-1.9 0-3.2-2.7-3.2-6.6v-4.3l-5.7 3C26 50.8 18 52.3 13 51 3.8 48.5 1.6 38.3 8.7 30.7c3.8-3.9 13.1-10.2 18.3-12.3l4.3-1.7-3.4-1.6c-3.6-1.7-5.7-6-2.3-4.7 1.1.4 4.6 1.4 7.9 2.1m108-.5c.3.5 1.7 1 3 1 4.1 0 3.8 1.9-.8 6.3-2.4 2.3-4.6 4.8-4.9 5.6-.6 2.1-2.8.4-2.8-2.3 0-1.2.7-3.1 1.5-4.2 3.4-4.5 1.1-4.5-8 0-7.1 3.5-10.5 5.8-10.5 7 0 .3 3.6.6 7.9.6 7.1 0 8.3.3 11 2.6 3.9 3.2 3.9 5.7.3 11.5-5.1 8-16.3 15.9-22.5 15.9-3.4 0-6.7-3.2-6.7-6.5 0-2.9 6.9-10.3 12-13 3-1.5 3.3-1.5 5.1.1 2 1.8 2 1.8-.8 3.2-3 1.5-12.3 10.1-12.3 11.4 0 1.4 3 .9 7.3-1.3 4.8-2.4 14.2-11.1 16.3-15.2 1.4-2.6 1.3-2.8-1.1-3.7-1.5-.6-7.3-1-13-1-10.6 0-13.5-1-10.2-3.5 1-.7 1.7-1.9 1.7-2.8 0-4.9 25.1-15.6 27.5-11.7m-38.1 3.5c-.1 1.7-1.3 6.1-2.7 9.9-1.5 3.8-3.4 10.3-4.3 14.5s-1.8 7.8-2 8c-.9 1-3.4-2.5-3.4-4.8v-2.6l-2.3 2.9c-3.8 4.6-6.1 3.3-6.8-3.9-.3-3.3-.6-5.3-.7-4.4-.3 2.8-6.1 10.5-8.9 11.8-2.5 1.1-2.9 1-4.5-.9-1-1.2-1.8-3.3-1.8-4.6 0-2.2-.3-2.1-4.3 2.1-4.8 4.9-5.4 5.2-8.2 3.1-4.5-3.2-.7-18.3 5.7-23 3.8-2.7 7.8-1 7.8 3.4 0 3.8 1.1 3.8 3.3.1.9-1.5 3-3.4 4.7-4.1 2.6-1.1 3.3-1 5 .5 1.3 1.1 2 3.1 2 5.4l.1 3.6 2.5-4.9 2.6-4.8 4.3.5 4.4.6 1.7-5.2c2.2-6.7 2.3-6.9 4.2-6.5 1.2.2 1.7 1.3 1.6 3.3m53.2-1.1c.3.7-.6 3.9-2 7.1-3.3 7.3-3.2 7.8.3 3.5 2.5-2.9 3.1-3.2 4.5-2.1 2.1 1.7 2 3.3-.5 11.1-1.2 3.6-2.4 8.7-2.7 11.5-.8 5.8-3.4 7.3-5.3 3.1-1-2-.7-4 1.8-11.8l3-9.2-2.8 3.3c-1.5 1.9-4 6.3-5.5 9.8-1.9 4.5-3.2 6.3-4.6 6.3-1.1 0-1.8-.7-1.8-1.8 0-2 10.7-29.1 12.2-31 1.4-1.6 2.7-1.5 3.4.2m17.8 9.8c2 2.8 2 5.3.1 10.9-3.6 10.5-11.8 15.5-14.5 9-2.9-7 4.7-22.1 11.1-22.1 1 0 2.5 1 3.3 2.2m8.4.6c.4 2.9 1.6 2.8 3.6-.4 2.5-3.7 6-3 6.4 1.4.5 4.8-2.6 13.2-6.1 17-2.4 2.5-3.9 3.2-6.2 3-2.8-.3-3.1 0-4.1 4.2-.7 2.8-1.7 4.6-2.7 4.8-3 .6-2.9-2.3.1-10.9 1.6-4.6 3.5-10.9 4.1-13.9.7-3 1.4-6.1 1.7-6.8.6-2 2.9-.9 3.2 1.6M41.7 70.2c-.2 1.3-.4.5-.4-1.7-.1-2.2.1-3.2.4-2.3.2 1 .2 2.8 0 4m12.5-1.8c.2 1.9 0 3.2-.4 3-.8-.5-1.2-6.4-.4-6.4.2 0 .6 1.5.8 3.4M79 66c0 .5-.4 1-1 1-.5 0-1-.5-1-1 0-.6.5-1 1-1 .6 0 1 .4 1 1m36.5 1c-.5 1.5-.2 2 1.4 2 1.1 0 2.2-.8 2.4-1.8.4-1.5.5-1.5.6 0 0 .9-1.2 2.3-2.9 3.2-3 1.4-3 1.4-3-1.3 0-2.5.7-4.1 1.7-4.1.3 0 .1.9-.2 2m11 1.1c-.5 4.2-1.5 5-1.5 1.2 0-2.6.6-4.3 1.6-4.3.2 0 .1 1.4-.1 3.1m13.3 0c1.4.1 1.4.2-.1.6-1.1.3-1.6 1.1-1.3 1.9s.1 1.4-.4 1.4c-.6 0-.9-1.7-.9-3.8.1-2 .3-2.9.6-2 .2 1 1.2 1.9 2.1 1.9m9.3-1c.7 1.3.7 1.9.1 1.5-.6-.3-1.3.4-1.5 1.6-.3 1.5-.5.9-.6-1.5-.1-4.2.3-4.6 2-1.6m38.8 1.6c-.1 2.1-.3 3-.6 2-.2-.9-.9-1.7-1.4-1.7-.6 0-.5-.8.1-2 1.6-2.9 2-2.5 1.9 1.7m-176.6-.2c-.8 2.2-2.2 1.8-1.6-.5.3-1.1.9-1.7 1.4-1.5.4.3.6 1.2.2 2m7-.6c.2 1 .1 2.5-.4 3.2-.6 1-.9.4-.9-1.9 0-3.6.5-4.2 1.3-1.3m3.9 2.1c-.6 1.6-1.1 2-1.6 1.1-.4-.6-.3-1.8.3-2.5s.9-1.5.7-1.8c-.1-.3.1-.2.6.2s.5 1.7 0 3m12.6-.9c-.3.8-.7.3-1.1-1-.4-1.7-.3-2.1.5-1.3.5.5.8 1.6.6 2.3m23.5 2c-.6.6-.7-.3-.4-2.3.4-2.8.6-2.9.9-.9.2 1.3 0 2.7-.5 3.2m7.1-3.6c-.4.8-.1 2.2.6 3 .9 1.1.9 1.5.1 1.5-.6 0-1.4-.7-1.7-1.5-.6-1.5.1-4.5 1-4.5.3 0 .3.7 0 1.5m21 0c-.4.8-.1 2.2.6 3 .9 1.1.9 1.5.1 1.5-.6 0-1.4-.7-1.7-1.5-.6-1.5.1-4.5 1-4.5.3 0 .3.7 0 1.5M93 69c0 1-.7 2.1-1.6 2.4-1.4.5-1.5.4-.4-.9.7-.8 1-2.2.6-3-.3-.9-.2-1.3.4-1s1 1.4 1 2.5m9.2.3c1 .4 1 .7-.1 1.8-.9.9-1.1.9-.7.1.5-.7-.2-1.6-1.9-2.2-1.4-.5-2.3-1.5-2-2 .4-.6 1.2-.5 2 .4.8.8 2 1.6 2.7 1.9m28.8-2.1c0 2.2-1.7 4.1-2.4 2.9-.4-.6-.2-1.1.4-1.1.7 0 1-.7.6-1.5-.3-.8-.1-1.5.4-1.5.6 0 1 .6 1 1.2m24-.2c0 .5-.5 1-1.1 1-.5 0-.7-.5-.4-1 .3-.6.8-1 1.1-1 .2 0 .4.4.4 1m14.2 1.9c.2 1.7.1 2.8-.4 2.5-.8-.5-1.2-5.4-.4-5.4.2 0 .6 1.3.8 2.9m4.4 1.7c-.3.8-1.1 1.4-1.8 1.3q-1.5 0 0-.6c.6-.2 1.3-1.7 1.3-3.1q.15-2.7.6-.9c.3 1 .2 2.5-.1 3.3m7.7-1.9c-.7.2-.9 1.1-.6 1.9s0 1.4-.6 1.4c-1.3 0-1.3-.6-.5-3.8.5-1.8.9-2 1.8-1.1.8.8.8 1.3-.1 1.6m-174 1.8c-.7 2.1-1.3 1.9-1.3-.6 0-1.1.4-1.8 1-1.4.5.3.7 1.2.3 2m70.4-.3c-.3.8-.6.5-.6-.6-.1-1.1.2-1.7.5-1.3.3.3.4 1.2.1 1.9M152 70c0 .5-.5 1-1.1 1-.5 0-.7-.5-.4-1 .3-.6.8-1 1.1-1 .2 0 .4.4.4 1m32.5 0c.3.5.1 1-.4 1-.6 0-1.1-.5-1.1-1 0-.6.2-1 .4-1 .3 0 .8.4 1.1 1"/><path d="M59.1 30.8c-5 9.9-5.2 17.4-.3 10.4C61 38.1 64 29.9 64 27c0-3.6-1.9-2.1-4.9 3.8m16.4-3.4C73.3 30.7 70 39.5 70 42c0 3.8 2.1 2 4.9-4.3 4.6-9.9 4.9-16.9.6-10.3m15.6.5c-2.5 2.5-4.7 6.7-5.6 10.8-.7 3.7.3 4.2 2.8 1.5 1.4-1.5 6.7-12.4 6.7-13.7 0-1.2-2.2-.3-3.9 1.4m75.9 3.3c-2.9 6.1-4.1 13.6-2 12.3 1.8-1.1 5.9-10.2 6.6-14.4 1-6.2-1.2-5.2-4.6 2.1m17.9-1.2c-3 3.9-5.9 9.4-5.9 11 0 1.8 2.6 1.1 4.7-1.3 2.3-2.5 4.6-8.8 4.1-11.4-.3-1.4-.9-1.1-2.9 1.7"/></svg>
+            <img src={logoImg} alt="Good Shop Logo" className="h-10 brightness-0 invert" />
           </Link>
         </div>
 
         <nav className="flex-1 py-4 flex flex-col gap-1 overflow-y-auto pr-2">
-          <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/admin" />
-          <SidebarItem icon={Package} label="Productos" to="/admin/products" />
-          <SidebarItem icon={Layers} label="Kits / Combos" to="/admin/kits" />
-          <SidebarItem icon={ImageIcon} label="Creador Combos" to="/admin/combos" />
-          <SidebarItem icon={ShoppingCart} label="Pedidos" to="/admin/orders" />
-          <SidebarItem icon={BarChart3} label="Reportes" to="/admin/reports" />
-          <SidebarItem icon={Receipt} label="Gastos" to="/admin/gastos" />
-          <SidebarItem icon={Tags} label="Marcas" to="/admin/brands" />
-          <SidebarItem icon={Tags} label="Categorías" to="/admin/categories" />
-          <SidebarItem icon={FileText} label="Presupuestos" to="/admin/presupuestos" />
+          <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/admin" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={Package} label="Productos" to="/admin/products" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={Layers} label="Kits / Combos" to="/admin/kits" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={ImageIcon} label="Creador Combos" to="/admin/combos" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={ShoppingCart} label="Pedidos" to="/admin/orders" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={BarChart3} label="Reportes" to="/admin/reports" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={Receipt} label="Gastos" to="/admin/gastos" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={Tags} label="Marcas" to="/admin/brands" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={Tags} label="Categorías" to="/admin/categories" onClick={() => setSidebarOpen(false)} />
+          <SidebarItem icon={FileText} label="Presupuestos" to="/admin/presupuestos" onClick={() => setSidebarOpen(false)} />
         </nav>
 
         <div className="p-4 border-t border-dark-border">
@@ -102,10 +128,29 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto bg-dark-base p-8">
-        <Outlet />
-      </main>
+      {/* ── ÁREA PRINCIPAL ── */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Header mobile — solo visible en mobile */}
+        <header className="md:hidden flex items-center justify-between px-4 h-14 bg-dark-card border-b border-dark-border sticky top-0 z-10">
+          <span className="font-heading font-bold text-white text-lg italic">
+            Good Shop
+          </span>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-gray-400 hover:text-white p-1"
+            aria-label="Abrir menú"
+          >
+            <Menu size={24} />
+          </button>
+        </header>
+
+        {/* Contenido de la página */}
+        <main className="flex-1 overflow-auto p-4 md:p-8">
+          <Outlet />
+        </main>
+
+      </div>
     </div>
   );
 };

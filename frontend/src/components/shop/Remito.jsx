@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
-import logoSvg from '../../assets/goodshop.svg';
+import logoSvg from '../../assets/goodshop_logo.svg';
 import { printRemito } from '../../utils/printRemito';
 import { formatCurrency } from '../../utils/formatters';
 

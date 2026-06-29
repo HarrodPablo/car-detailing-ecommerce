@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import logoImg from '../assets/goodshop.svg'
+import logoImg from '../assets/goodshop_logo.svg'
 
 const API_URL = import.meta.env.VITE_API_URL
 
