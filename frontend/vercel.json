@@ -1,4 +1,15 @@
 {
+  "headers": [
+    {
+      "source": "/og-image.jpg",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "image/jpeg"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
