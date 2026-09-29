@@ -149,6 +149,9 @@ const HeroSection = () => {
                 <img
                   src={latestProduct.imageUrl || (latestProduct.images && latestProduct.images[0]?.url) || "https://images.unsplash.com/photo-1620853761821-399a9a3b6f00?q=80&w=600&auto=format&fit=crop"}
                   alt={latestProduct.name}
+                  width="256"
+                  height="256"
+                  fetchpriority="high"
                   className="w-64 h-auto object-contain drop-shadow-2xl mix-blend-lighten mb-6"
                 />
 

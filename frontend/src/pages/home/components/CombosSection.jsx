@@ -76,6 +76,9 @@ const CombosSection = () => {
                         <img 
                           src={imgUrl} 
                           alt={combo.name} 
+                          loading="lazy"
+                          width="300"
+                          height="300"
                           className="w-full h-full object-contain mix-blend-screen"
                         />
                       ) : (

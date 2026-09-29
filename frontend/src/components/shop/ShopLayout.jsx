@@ -35,7 +35,7 @@ const ShopLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <Link to="/cart" className="relative text-white hover:text-brand transition-colors flex items-center gap-2">
+            <Link to="/cart" className="relative text-white hover:text-brand transition-colors flex items-center gap-2" aria-label="Ver carrito de compras">
               <ShoppingCart />
               <span className="hidden md:inline font-mono">${getCartTotal().toLocaleString('es-AR')}</span>
               {items.length > 0 && (

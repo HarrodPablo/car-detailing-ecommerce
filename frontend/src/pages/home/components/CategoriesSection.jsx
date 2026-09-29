@@ -56,6 +56,9 @@ const CategoriesSection = () => {
       <img
         src={category.image}
         alt={category.title}
+        loading="lazy"
+        width="400"
+        height="300"
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
 
