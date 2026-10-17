@@ -22,7 +22,6 @@ Plataforma completa de comercio electrónico y sistema de gestión (CRM/Admin) p
 - **Seguridad**: Helmet, CORS, bcrypt
 - **Tareas Programadas (Cron Jobs)**: Alertas de stock y vencimiento de lotes (node-cron)
 - **Integraciones IA**: @google/generative-ai (Gemini) - *Configurado en dependencias*
-- **Otras herramientas**: @imgly/background-removal-node (deshabilitado temporalmente en este entorno)
 
 ## 📁 Arquitectura del Proyecto
 
