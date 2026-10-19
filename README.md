@@ -193,10 +193,3 @@ Full-Stack Developer
 
 - **GitHub**: [@HarrodPablo](https://github.com/HarrodPablo)
 - **LinkedIn**: [linkedin.com/in/pablo-ezequiel-harrod-b172423ab](https://www.linkedin.com/in/pablo-ezequiel-harrod-b172423ab/)
-- **Email**: Contact via LinkedIn or GitHub
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - feel free to inspect and learn from the codebase.
